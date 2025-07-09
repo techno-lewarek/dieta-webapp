@@ -4,37 +4,87 @@
     <meta charset="UTF-8">
     <title>Kalkulator Diety Krajowej</title>
     <style>
-        body { font-family: Arial, sans-serif; margin: 2em; max-width: 700px; }
-        label, input { display: block; margin-top: 1em; }
-        button { margin-top: 2em; padding: 0.5em 1em; }
-        #result { margin-top: 2em; white-space: pre-wrap; font-family: monospace; background: #f9f9f9; padding: 1em; border-radius: 8px; }
+        body {
+            font-family: Arial, sans-serif;
+            margin: 2em;
+            text-align: center;
+        }
+        .container {
+            max-width: 600px;
+            margin: auto;
+        }
+        img.logo {
+            max-width: 150px;
+            margin-bottom: 20px;
+        }
+        input[type="datetime-local"] {
+            font-size: 1.2em;
+            width: 50%;
+            padding: 0.5em;
+            margin-top: 0.5em;
+        }
+        button {
+            margin-top: 2em;
+            padding: 0.8em 2em;
+            font-size: 1.1em;
+            cursor: pointer;
+        }
+        table {
+            margin: 2em auto;
+            border-collapse: collapse;
+            width: 100%;
+            max-width: 600px;
+        }
+        th, td {
+            border: 1px solid #ccc;
+            padding: 0.8em;
+            text-align: left;
+        }
+        th {
+            background-color: #f0f0f0;
+        }
+        .total {
+            font-weight: bold;
+            font-size: 1.2em;
+            margin-top: 1em;
+        }
     </style>
 </head>
 <body>
-    <h1>Kalkulator Diety Krajowej</h1>
-    <label for="start">Początek delegacji:</label>
-    <input type="datetime-local" id="start">
-    
-    <label for="end">Koniec delegacji:</label>
-    <input type="datetime-local" id="end">
-    
-    <button onclick="calculateDiet()">Oblicz</button>
-    
-    <div id="result"></div>
+    <div class="container">
+        <!-- Logo (opcjonalnie) -->
+        <img src="logo.png" alt="Logo" class="logo" />
+
+        <h1>Kalkulator Diety Krajowej</h1>
+
+        <label for="start">Początek delegacji:</label>
+        <input type="datetime-local" id="start">
+
+        <label for="end">Koniec delegacji:</label>
+        <input type="datetime-local" id="end">
+
+        <br>
+        <button onclick="calculateDiet()">Oblicz</button>
+
+        <div id="result"></div>
+    </div>
 
     <script>
         function calculateDiet() {
             const startInput = document.getElementById('start').value;
             const endInput = document.getElementById('end').value;
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = '';
+
             if (!startInput || !endInput) {
-                document.getElementById('result').innerText = "Wprowadź poprawne daty i godziny.";
+                resultDiv.innerHTML = "<p>Wprowadź poprawne daty i godziny.</p>";
                 return;
             }
 
             const start = new Date(startInput);
             const end = new Date(endInput);
             if (end <= start) {
-                document.getElementById('result').innerText = "Koniec musi być po początku.";
+                resultDiv.innerHTML = "<p>Koniec musi być po początku.</p>";
                 return;
             }
 
@@ -43,26 +93,42 @@
             const fullDays = Math.floor(totalHours / 24);
             const remainingHours = totalHours % 24;
             const rate = 45;
-            let result = "Rozliczenie diet:\n";
-            const options = { weekday: 'long', hour: '2-digit', minute: '2-digit' };
+
             const midPoint = new Date(start.getTime() + fullDays * 24 * 60 * 60 * 1000);
-            result += `1. ${start.toLocaleString("pl-PL", options)} – ${midPoint.toLocaleString("pl-PL", options)} = ${fullDays} pełne doby → ${fullDays} x 45 zł = ${fullDays * rate} zł\n`;
+
+            let tableHTML = `
+                <table>
+                    <tr><th>Zakres czasu</th><th>Opis</th><th>Kwota</th></tr>
+                    <tr>
+                        <td>${start.toLocaleString("pl-PL", { weekday: 'long', hour: '2-digit', minute: '2-digit' })} – ${midPoint.toLocaleString("pl-PL", { weekday: 'long', hour: '2-digit', minute: '2-digit' })}</td>
+                        <td>${fullDays} pełne doby</td>
+                        <td>${fullDays} x 45 zł = ${fullDays * rate} zł</td>
+                    </tr>
+            `;
 
             let extra = 0;
+            let opis = '';
             if (remainingHours < 8) {
-                result += `2. ${midPoint.toLocaleString("pl-PL", options)} – ${end.toLocaleString("pl-PL", options)} = ${remainingHours} godzin → dieta nie przysługuje\n`;
+                opis = "dieta nie przysługuje";
             } else if (remainingHours < 12) {
                 extra = rate / 2;
-                result += `2. ${midPoint.toLocaleString("pl-PL", options)} – ${end.toLocaleString("pl-PL", options)} = ${remainingHours} godzin → 50% diety = ${extra} zł\n`;
+                opis = "50% diety";
             } else {
                 extra = rate;
-                result += `2. ${midPoint.toLocaleString("pl-PL", options)} – ${end.toLocaleString("pl-PL", options)} = ${remainingHours} godzin → pełna dieta = ${extra} zł\n`;
+                opis = "pełna dieta";
             }
 
-            const total = (fullDays * rate) + extra;
-            result += `\nSuma: ${total} zł`;
+            tableHTML += `
+                <tr>
+                    <td>${midPoint.toLocaleString("pl-PL", { weekday: 'long', hour: '2-digit', minute: '2-digit' })} – ${end.toLocaleString("pl-PL", { weekday: 'long', hour: '2-digit', minute: '2-digit' })}</td>
+                    <td>${opis}</td>
+                    <td>${extra} zł</td>
+                </tr>
+                </table>
+                <div class="total">Suma: ${(fullDays * rate) + extra} zł</div>
+            `;
 
-            document.getElementById('result').innerText = result;
+            resultDiv.innerHTML = tableHTML;
         }
     </script>
 </body>
