@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <title>Kalkulator Diety Krajowej</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 2em; max-width: 700px; }
+        label, input { display: block; margin-top: 1em; }
+        button { margin-top: 2em; padding: 0.5em 1em; }
+        #result { margin-top: 2em; white-space: pre-wrap; font-family: monospace; background: #f9f9f9; padding: 1em; border-radius: 8px; }
+    </style>
+</head>
+<body>
+    <h1>Kalkulator Diety Krajowej</h1>
+    <label for="start">Początek delegacji:</label>
+    <input type="datetime-local" id="start">
+    
+    <label for="end">Koniec delegacji:</label>
+    <input type="datetime-local" id="end">
+    
+    <button onclick="calculateDiet()">Oblicz</button>
+    
+    <div id="result"></div>
+
+    <script>
+        function calculateDiet() {
+            const startInput = document.getElementById('start').value;
+            const endInput = document.getElementById('end').value;
+            if (!startInput || !endInput) {
+                document.getElementById('result').innerText = "Wprowadź poprawne daty i godziny.";
+                return;
+            }
+
+            const start = new Date(startInput);
+            const end = new Date(endInput);
+            if (end <= start) {
+                document.getElementById('result').innerText = "Koniec musi być po początku.";
+                return;
+            }
+
+            const msDiff = end - start;
+            const totalHours = Math.floor(msDiff / (1000 * 60 * 60));
+            const fullDays = Math.floor(totalHours / 24);
+            const remainingHours = totalHours % 24;
+            const rate = 45;
+            let result = "Rozliczenie diet:\n";
+            const options = { weekday: 'long', hour: '2-digit', minute: '2-digit' };
+            const midPoint = new Date(start.getTime() + fullDays * 24 * 60 * 60 * 1000);
+            result += `1. ${start.toLocaleString("pl-PL", options)} – ${midPoint.toLocaleString("pl-PL", options)} = ${fullDays} pełne doby → ${fullDays} x 45 zł = ${fullDays * rate} zł\n`;
+
+            let extra = 0;
+            if (remainingHours < 8) {
+                result += `2. ${midPoint.toLocaleString("pl-PL", options)} – ${end.toLocaleString("pl-PL", options)} = ${remainingHours} godzin → dieta nie przysługuje\n`;
+            } else if (remainingHours < 12) {
+                extra = rate / 2;
+                result += `2. ${midPoint.toLocaleString("pl-PL", options)} – ${end.toLocaleString("pl-PL", options)} = ${remainingHours} godzin → 50% diety = ${extra} zł\n`;
+            } else {
+                extra = rate;
+                result += `2. ${midPoint.toLocaleString("pl-PL", options)} – ${end.toLocaleString("pl-PL", options)} = ${remainingHours} godzin → pełna dieta = ${extra} zł\n`;
+            }
+
+            const total = (fullDays * rate) + extra;
+            result += `\nSuma: ${total} zł`;
+
+            document.getElementById('result').innerText = result;
+        }
+    </script>
+</body>
+</html>
