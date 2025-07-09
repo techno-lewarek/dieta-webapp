@@ -8,32 +8,54 @@
             font-family: Arial, sans-serif;
             margin: 2em;
             text-align: center;
+            background-color: #f7f7f7;
         }
         .container {
-            max-width: 600px;
+            max-width: 700px;
             margin: auto;
+            background: white;
+            padding: 2em;
+            border-radius: 12px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
         }
         img.logo {
-            max-width: 150px;
+            max-width: 500px;
             margin-bottom: 20px;
         }
-        input[type="datetime-local"] {
-            font-size: 1.2em;
-            width: 50%;
+        .input-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1.5em;
+            margin-bottom: 2em;
+        }
+        .input-section label {
+            font-weight: bold;
+            font-size: 1.1em;
+        }
+        .input-section input {
+            font-size: 1.3em;
+            width: 80%;
             padding: 0.5em;
-            margin-top: 0.5em;
         }
         button {
-            margin-top: 2em;
+            margin-top: 1em;
             padding: 0.8em 2em;
             font-size: 1.1em;
             cursor: pointer;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 6px;
+        }
+        button:hover {
+            background-color: #0056b3;
         }
         table {
             margin: 2em auto;
             border-collapse: collapse;
             width: 100%;
-            max-width: 600px;
+            max-width: 100%;
         }
         th, td {
             border: 1px solid #ccc;
@@ -52,18 +74,19 @@
 </head>
 <body>
     <div class="container">
-        <!-- Logo (opcjonalnie) -->
+        <!-- Logo (jeśli wgrasz logo.png do repo) -->
         <img src="logo.png" alt="Logo" class="logo" />
 
         <h1>Kalkulator Diety Krajowej</h1>
 
-        <label for="start">Początek delegacji:</label>
-        <input type="datetime-local" id="start">
+        <div class="input-section">
+            <label for="start">Początek delegacji:</label>
+            <input type="datetime-local" id="start">
 
-        <label for="end">Koniec delegacji:</label>
-        <input type="datetime-local" id="end">
+            <label for="end">Koniec delegacji:</label>
+            <input type="datetime-local" id="end">
+        </div>
 
-        <br>
         <button onclick="calculateDiet()">Oblicz</button>
 
         <div id="result"></div>
@@ -100,7 +123,7 @@
                 <table>
                     <tr><th>Zakres czasu</th><th>Opis</th><th>Kwota</th></tr>
                     <tr>
-                        <td>${start.toLocaleString("pl-PL", { weekday: 'long', hour: '2-digit', minute: '2-digit' })} – ${midPoint.toLocaleString("pl-PL", { weekday: 'long', hour: '2-digit', minute: '2-digit' })}</td>
+                        <td>${start.toLocaleString("pl-PL", { weekday: 'long', hour: '2-digit', minute: '2-digit' })}<br>↓<br>${midPoint.toLocaleString("pl-PL", { weekday: 'long', hour: '2-digit', minute: '2-digit' })}</td>
                         <td>${fullDays} pełne doby</td>
                         <td>${fullDays} x 45 zł = ${fullDays * rate} zł</td>
                     </tr>
@@ -120,7 +143,7 @@
 
             tableHTML += `
                 <tr>
-                    <td>${midPoint.toLocaleString("pl-PL", { weekday: 'long', hour: '2-digit', minute: '2-digit' })} – ${end.toLocaleString("pl-PL", { weekday: 'long', hour: '2-digit', minute: '2-digit' })}</td>
+                    <td>${midPoint.toLocaleString("pl-PL", { weekday: 'long', hour: '2-digit', minute: '2-digit' })}<br>↓<br>${end.toLocaleString("pl-PL", { weekday: 'long', hour: '2-digit', minute: '2-digit' })}</td>
                     <td>${opis}</td>
                     <td>${extra} zł</td>
                 </tr>
