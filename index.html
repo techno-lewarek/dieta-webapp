@@ -4,18 +4,20 @@
     <meta charset="UTF-8">
     <title>Kalkulator Delegacji + PDF</title>
     <style>
-        body { font-family: Arial, sans-serif; margin: 2em; background: #f5f5f5; }
-        h1 { text-align: center; }
+        body { font-family: Arial, sans-serif; margin: 2em; background: #f5f5f5; text-align: center; }
+        h1 { margin-top: 0.5em; }
         table { width: 100%; border-collapse: collapse; margin-bottom: 1em; }
         th, td { border: 1px solid #ccc; padding: 8px; text-align: center; }
         th { background: #e0e0e0; }
         input, select { width: 100%; padding: 4px; box-sizing: border-box; }
         .btn { padding: 10px 20px; margin: 1em 0; font-size: 1em; cursor: pointer; }
         #generatePDF { background: #007bff; color: white; border: none; border-radius: 4px; }
+        .logo { max-width: 150px; margin: 0 auto 20px; display: block; }
     </style>
 </head>
 <body>
-    <h1>Delegacja służbowa</h1>
+    <img src="logo.png" alt="Logo" class="logo">
+    <h1>Kalkulator Diety Krajowej</h1>
 
     <label for="delegationNumber">Numer delegacji służbowej:</label>
     <input type="text" id="delegationNumber" placeholder="np. KB/001/2025">
@@ -81,10 +83,12 @@
             const delegationNumber = document.getElementById("delegationNumber").value || "Brak numeru";
 
             doc.setFontSize(16);
-            doc.text(`Delegacja nr: ${delegationNumber}`, 10, 15);
+            doc.text("Kalkulator Diety Krajowej", 105, 15, { align: "center" });
+            doc.setFontSize(12);
+            doc.text(`Delegacja nr: ${delegationNumber}`, 10, 25);
 
             const rows = Array.from(tbody.querySelectorAll("tr"));
-            let startY = 25;
+            let startY = 35;
             doc.setFontSize(10);
             doc.text("Miejsce wyjazdu | Data | Godz. | Miejsce przyjazdu | Data | Godz. | Lokomocja | Koszt (zł) | km", 10, startY);
             startY += 5;
