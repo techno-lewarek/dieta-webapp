@@ -1,69 +1,443 @@
 <!DOCTYPE html>
 <html lang="pl">
 <head>
-    <meta charset="UTF-8">
-    <title>Kalkulator Diety Krajowej</title>
-    <style>
-        body { font-family: Arial, sans-serif; margin: 2em; max-width: 700px; }
-        label, input { display: block; margin-top: 1em; }
-        button { margin-top: 2em; padding: 0.5em 1em; }
-        #result { margin-top: 2em; white-space: pre-wrap; font-family: monospace; background: #f9f9f9; padding: 1em; border-radius: 8px; }
-    </style>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Kalkulator Diety Krajowej</title>
+<style>
+  :root{
+    --brand:#2c3e70;
+    --ui-radius:12px;
+    --ui-border:#d0d7de;
+    --ui-bg:#fff;
+    --ui-text:#111;
+    --ring: rgba(44,62,112,.22);
+  }
+  body { font-family: 'Noto Sans', Arial, sans-serif; margin:2em; background:#f5f5f5; text-align:center }
+  h1 { margin-top:.5em; font-size:1.6em }
+  table { width:100%; border-collapse:collapse; margin-bottom:1em; table-layout:fixed; background:#fff }
+  th, td { border:1px solid #ccc; padding:4px; text-align:center; vertical-align:middle; word-wrap:break-word; overflow-wrap:break-word }
+  th { background:var(--brand); color:#fff }
+  .btn { padding:10px 20px; margin:1em 0; font-size:1em; cursor:pointer }
+  #generatePDF { background:#007bff; color:#fff; border:none; border-radius:4px }
+  .logo { max-width:270px; margin:0 auto 20px; display:block }
+  .form-group { margin-bottom:1em }
+  .form-group label { display:block; margin-bottom:.5em; font-weight:700 }
+
+  /* —————— NOWOCZEŚNIEJSZE INPUTY (CSS-only) —————— */
+  /* wszystkie inputy/selecty w formularzu i tabeli */
+  .form-group :where(input, select),
+  #delegationTable :where(input, select){
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    width:100%;
+    box-sizing:border-box;
+    height:42px;
+    padding:0 12px;
+    margin:0;
+    border:1px solid var(--ui-border);
+    border-radius:var(--ui-radius);
+    background:var(--ui-bg);
+    color:var(--ui-text);
+    font:500 14px/1.2 'Noto Sans', Arial, sans-serif;
+    letter-spacing:.2px;
+    transition:border-color .15s ease, box-shadow .15s ease, background-color .15s ease, transform .05s ease;
+    box-shadow:inset 0 1px 0 rgba(17,17,17,.03), 0 1px 2px rgba(17,17,17,.03);
+  }
+  .form-group :where(input, select):hover,
+  #delegationTable :where(input, select):hover{
+    border-color:#b6bec8;
+    background:#fafafa;
+  }
+  .form-group :where(input, select):focus,
+  #delegationTable :where(input, select):focus{
+    outline:0;
+    border-color:var(--brand);
+    box-shadow:0 0 0 4px var(--ring);
+    background:#fff;
+  }
+  #delegationTable td{ padding:6px; } /* trochę oddechu dla nowych pól */
+
+  /* ujednolicone pola specjalne */
+  #delegationTable input[type="date"],
+  #delegationTable input[type="time"],
+  #delegationTable input[type="number"],
+  #delegationTable input[type="text"],
+  .form-group input[type="text"],
+  .form-group select{ padding:0 12px; }
+
+  /* “ładna strzałka” w <select> */
+  .form-group select,
+  #delegationTable select{
+    padding-right:36px;
+    background-image:
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='%232c3e70' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+    background-repeat:no-repeat;
+    background-position:right 10px center;
+    background-size:18px 18px;
+  }
+
+  /* number – bez spinnerów */
+  #delegationTable input[type=number]::-webkit-outer-spin-button,
+  #delegationTable input[type=number]::-webkit-inner-spin-button{ -webkit-appearance:none; margin:0; }
+  #delegationTable input[type=number]{ -moz-appearance:textfield; }
+
+  /* disabled – “km” przy prywatnym aucie */
+  #delegationTable :where(input, select):disabled{
+    background:#f3f4f6;
+    color:#6b7280;
+    cursor:not-allowed;
+  }
+
+  /* opcjonalny stan :invalid (jeśli dodasz required do pól) */
+  .form-group :where(input, select):invalid,
+  #delegationTable :where(input, select):invalid{
+    border-color:#d92d20;
+    box-shadow:0 0 0 4px rgba(217,45,32,.15);
+  }
+</style>
 </head>
 <body>
-    <h1>Kalkulator Diety Krajowej</h1>
-    <label for="start">Początek delegacji:</label>
-    <input type="datetime-local" id="start">
-    
-    <label for="end">Koniec delegacji:</label>
-    <input type="datetime-local" id="end">
-    
-    <button onclick="calculateDiet()">Oblicz</button>
-    
-    <div id="result"></div>
+<datalist id="cityList"></datalist>
+  <img src="logo.png" alt="Logo" class="logo" />
+  <h1>Kalkulator Diety Krajowej</h1>
 
-    <script>
-        function calculateDiet() {
-            const startInput = document.getElementById('start').value;
-            const endInput = document.getElementById('end').value;
-            if (!startInput || !endInput) {
-                document.getElementById('result').innerText = "Wprowadź poprawne daty i godziny.";
-                return;
-            }
+  <div class="form-group">
+    <label for="employeeName">Imię i nazwisko:</label>
+    <select id="employeeName">
+      <option value="">-- Wybierz --</option>
+      <option value="Barczak Dominik">Barczak Dominik</option>
+      <option value="Barczak Krzysztof">Barczak Krzysztof</option>
+      <option value="Mytnychuk Anton">Mytnychuk Anton</option>
+      <option value="Mytnychuk Yurii">Mytnychuk Yurii</option>
+      <option value="Witkowski Krzysztof">Witkowski Krzysztof</option>
+    </select>
+  </div>
 
-            const start = new Date(startInput);
-            const end = new Date(endInput);
-            if (end <= start) {
-                document.getElementById('result').innerText = "Koniec musi być po początku.";
-                return;
-            }
+  <div class="form-group">
+    <label for="delegationNumber">Numer delegacji służbowej:</label>
+    <input type="text" id="delegationNumber" placeholder="np. KW/001/2025" />
+  </div>
 
-            const msDiff = end - start;
-            const totalHours = Math.floor(msDiff / (1000 * 60 * 60));
-            const fullDays = Math.floor(totalHours / 24);
-            const remainingHours = totalHours % 24;
-            const rate = 45;
-            let result = "Rozliczenie diet:\n";
-            const options = { weekday: 'long', hour: '2-digit', minute: '2-digit' };
-            const midPoint = new Date(start.getTime() + fullDays * 24 * 60 * 60 * 1000);
-            result += `1. ${start.toLocaleString("pl-PL", options)} – ${midPoint.toLocaleString("pl-PL", options)} = ${fullDays} pełne doby → ${fullDays} x 45 zł = ${fullDays * rate} zł\n`;
+  <table id="delegationTable">
+    <thead>
+      <tr>
+        <th>Miejsce wyjazdu</th>
+        <th>Data</th>
+        <th>Godzina</th>
+        <th>Miejsce przyjazdu</th>
+        <th>Data</th>
+        <th>Godzina</th>
+        <th>Środek lokomocji</th>
+        <th>Koszt przejazdu (zł)</th>
+        <th>km (jeśli prywatne)</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
 
-            let extra = 0;
-            if (remainingHours < 8) {
-                result += `2. ${midPoint.toLocaleString("pl-PL", options)} – ${end.toLocaleString("pl-PL", options)} = ${remainingHours} godzin → dieta nie przysługuje\n`;
-            } else if (remainingHours < 12) {
-                extra = rate / 2;
-                result += `2. ${midPoint.toLocaleString("pl-PL", options)} – ${end.toLocaleString("pl-PL", options)} = ${remainingHours} godzin → 50% diety = ${extra} zł\n`;
-            } else {
-                extra = rate;
-                result += `2. ${midPoint.toLocaleString("pl-PL", options)} – ${end.toLocaleString("pl-PL", options)} = ${remainingHours} godzin → pełna dieta = ${extra} zł\n`;
-            }
+  <button class="btn" onclick="addRow()">Dodaj wiersz</button>
+  <button class="btn" id="generatePDF">Wygeneruj PDF</button>
 
-            const total = (fullDays * rate) + extra;
-            result += `\nSuma: ${total} zł`;
+  <div id="pdf-fallback"></div>
 
-            document.getElementById('result').innerText = result;
+  <!-- Biblioteki -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+  <script>
+    const tbody = document.querySelector("#delegationTable tbody");
+    const employeeName = document.getElementById("employeeName");
+    const delegationNumber = document.getElementById("delegationNumber");
+
+    employeeName.addEventListener("change", () => {
+      const value = employeeName.value;
+      delegationNumber.value = value ? value.split(" ").map(p => p[0].toUpperCase()).join("") + "/" : "";
+    });
+
+    function addRow() {
+      const now = new Date();
+      const today = now.toISOString().split("T")[0];
+      const defaultTime = "08:00";
+      const row = document.createElement("tr");
+      row.innerHTML = `
+        <td><input type="text" list="cityList" value="Pakość" /></td>
+        <td><input type="date" value="${today}" /></td>
+        <td><input type="time" value="${defaultTime}" /></td>
+        <td><input type="text" list="cityList" /></td>
+        <td><input type="date" /></td>
+        <td><input type="time" /></td>
+        <td>
+          <select onchange="toggleKM(this)">
+            <option value="auto służbowe">Auto służbowe</option>
+            <option value="auto prywatne">Auto prywatne</option>
+            <option value="kolej">Transport kolejowy</option>
+            <option value="lotniczy">Transport lotniczy</option>
+          </select>
+        </td>
+        <td><input type="number" step="0.01" value="0" /></td>
+        <td><input type="number" step="0.1" disabled /></td>
+      `;
+      tbody.appendChild(row);
+    }
+
+    function toggleKM(select) {
+      const row = select.closest("tr");
+      const kmInput = row.cells[8].firstElementChild;
+      const costInput = row.cells[7].firstElementChild;
+      if (select.value === "auto prywatne") {
+        kmInput.disabled = false;
+      } else {
+        kmInput.disabled = true;
+        kmInput.value = "";
+      }
+      if (select.value === "auto służbowe") {
+        costInput.value = "0";
+      }
+    }
+
+    // start z 1 wierszem
+    addRow();
+
+    // ---- DATALIST: Twoja stara lista miast ----
+    const cityList = document.getElementById("cityList");
+    const polishCities = [
+      "Warszawa","Kraków","Łódź","Wrocław","Poznań","Gdańsk","Szczecin","Bydgoszcz","Lublin","Katowice","Białystok","Częstochowa","Radom","Toruń","Sosnowiec","Kielce","Rzeszów","Gliwice","Zabrze","Olsztyn","Bielsko-Biała","Bytom","Zielona Góra","Rybnik","Ruda Śląska","Opole","Tychy","Gorzów Wielkopolski","Dąbrowa Górnicza","Elbląg","Płock","Wałbrzych","Włocławek","Tarnów","Chorzów","Koszalin","Legnica","Grudziądz","Słupsk","Jaworzno","Jastrzębie-Zdrój","Nowy Sącz","Jelenia Góra","Konin","Piotrków Trybunalski","Inowrocław","Lubin","Ostrowiec Świętokrzyski","Siemianowice Śląskie","Gniezno","Stalowa Wola","Suwałki","Głogów","Pabianice","Chełm","Zamość","Leszno","Tomaszów Mazowiecki","Przemyśl","Stargard","Mysłowice","Kutno","Ostrów Wielkopolski","Ełk","Tarnowskie Góry","Piła","Świdnica","Mielec","Tczew","Biała Podlaska","Bełchatów","Zgierz","Świętochłowice","Racibórz","Wejherowo","Zawiercie","Kędzierzyn-Koźle","Starachowice","Skierniewice","Skarżysko-Kamienna","Żory","Ostrołęka","Nowa Sól","Knurów","Lębork","Otwock","Krosno","Ciechanów","Kołobrzeg","Świnoujście","Żyrardów","Tarnobrzeg","Śrem","Bochnia","Sopot","Nowy Dwór Mazowiecki","Jarosław","Wodzisław Śląski","Siedlce","Puławy","Czechowice-Dziedzice","Oława","Żywiec","Piekary Śląskie","Malbork","Kwidzyn","Bartoszyce","Brzeg","Dębica","Łomża","Sanok","Chojnice","Bielawa","Kłodzko","Augustów","Nysa","Luboń","Police","Mińsk Mazowiecki","Brodnica","Wągrowiec","Krotoszyn","Turek","Zduńska Wola","Zambrów","Kościerzyna","Gorlice","Lubań","Sandomierz","Krasnystaw","Hrubieszów","Łuków","Strzelce Opolskie","Działdowo","Wieluń","Wyszków","Środa Wielkopolska","Kępno","Złotów","Szczecinek"
+    ];
+    polishCities.forEach(city => {
+      const option = document.createElement("option");
+      option.value = city;
+      cityList.appendChild(option);
+    });
+
+    // ---- Liczby słownie (PL) ----
+    function numberToWordsPL(amount) {
+      const ones = ["", "jeden", "dwa", "trzy", "cztery", "pięć", "sześć", "siedem", "osiem", "dziewięć"];
+      const teens = ["dziesięć", "jedenaście", "dwanaście", "trzynaście", "czternaście", "piętnaście", "szesnaście", "siedemnaście", "osiemnaście", "dziewiętnaście"];
+      const tens = ["", "", "dwadzieścia", "trzydzieści", "czterdzieści", "pięćdziesiąt", "sześćdziesiąt", "siedemdziesiąt", "osiemdziesiąt", "dziewięćdziesiąt"];
+      const hundreds = ["", "sto", "dwieście", "trzysta", "czterysta", "pięćset", "sześćset", "siedemset", "osiemset", "dziewięćset"];
+
+      function toWordsUnder1000(n) {
+        if (n === 0) return "";
+        const h = Math.floor(n / 100);
+        const t = Math.floor((n % 100) / 10);
+        const o = n % 10;
+        let r = [];
+        if (h > 0) r.push(hundreds[h]);
+        if (t === 1 && o > 0) {
+          r.push(teens[o]);
+        } else {
+          if (t > 0) r.push(tens[t]);
+          if (o > 0) r.push(ones[o]);
         }
-    </script>
+        return r.join(" ");
+      }
+
+      function toWords(n) {
+        if (n === 0) return "zero";
+
+        const thousands = Math.floor(n / 1000);
+        const rest = n % 1000;
+        let result = [];
+
+        if (thousands > 0) {
+          if (thousands === 1) {
+            result.push("tysiąc");
+          } else {
+            result.push(toWordsUnder1000(thousands));
+            const lastDigit = thousands % 10;
+            const lastTwo = thousands % 100;
+            if (lastDigit >= 2 && lastDigit <= 4 && !(lastTwo >= 12 && lastTwo <= 14)) {
+              result.push("tysiące");
+            } else {
+              result.push("tysięcy");
+            }
+          }
+        }
+
+        if (rest > 0) {
+          result.push(toWordsUnder1000(rest));
+        }
+
+        return result.join(" ").trim();
+      }
+
+      const zl = Math.floor(amount);
+      const gr = Math.round((amount - zl) * 100);
+
+      const zlWord =
+        toWords(zl) +
+        (zl === 1
+          ? " złoty"
+          : zl % 10 >= 2 && zl % 10 <= 4 && (zl % 100 < 10 || zl % 100 >= 20)
+          ? " złote"
+          : " złotych");
+
+      const grWord =
+        gr > 0
+          ? toWords(gr) +
+            (gr === 1
+              ? " grosz"
+              : gr % 10 >= 2 && gr % 10 <= 4 && (gr % 100 < 10 || gr % 100 >= 20)
+              ? " grosze"
+              : " groszy")
+          : "";
+
+      return zlWord + (grWord ? " " + grWord : "");
+    }
+
+    // ---- Pomocnicze ----
+    const fmtPLN = (v) => new Intl.NumberFormat('pl-PL', { style: 'currency', currency: 'PLN' }).format(v);
+
+    async function loadLogoDataURL(src = 'logo.png') {
+      try {
+        const res = await fetch(src, { cache: 'force-cache' });
+        if (!res.ok) throw new Error('logo fetch failed');
+        const blob = await res.blob();
+        return await new Promise((resolve) => {
+          const r = new FileReader();
+          r.onload = () => resolve(r.result);
+          r.readAsDataURL(blob);
+        });
+      } catch { return null; }
+    }
+
+    // ---- Generowanie PDF: próba TTF -> fallback html2pdf ----
+    document.getElementById("generatePDF").addEventListener("click", async () => {
+      const rows = Array.from(tbody.querySelectorAll("tr"));
+      const mapped = rows.map(row => {
+        const inputs = row.querySelectorAll("input, select");
+        const vals = Array.from(inputs).map(i => i.value || "-");
+        const [fromCity, fromDate, fromTime, toCity, toDate, toTime, transport, cost, km] = vals;
+        let durationH = 0;
+        if (fromDate && fromTime && toDate && toTime) {
+          const start = new Date(`${fromDate}T${fromTime}`);
+          const end   = new Date(`${toDate}T${toTime}`);
+          durationH = (end - start) / 36e5;
+          if (!isFinite(durationH) || durationH < 0) durationH = 0;
+        }
+        let diet = 0;
+        if (durationH >= 8 && durationH < 12) {
+          diet = 22.5;
+        } else if (durationH >= 12 && durationH < 24) {
+          diet = 45.0;
+        } else if (durationH >= 24) {
+          diet = 45.0 * Math.floor(durationH / 24)
+               + (durationH % 24 >= 12 ? 45.0 : (durationH % 24 >= 8 ? 22.5 : 0));
+        }
+        return { vals, cost: parseFloat(cost)||0, diet };
+      });
+
+      const travelCostTotal = mapped.reduce((s,r)=>s+r.cost,0);
+      const dietTotal = mapped.reduce((s,r)=>s+r.diet,0);
+      const totalAmount = travelCostTotal + dietTotal;
+
+      try {
+        // Tryb A: jsPDF + NotoSans z katalogu fonts/
+        const res = await fetch("fonts/NotoSans-Regular.ttf", { cache: "force-cache" });
+        if (!res.ok) throw new Error("Nie można pobrać TTF (" + res.status + ")");
+        const buf = await res.arrayBuffer();
+        const base64 = btoa(String.fromCharCode(...new Uint8Array(buf)));
+        // ... Twoja dalsza logika PDF ...
+        doc.save(`Delegacja_${delegationNumber.value}.pdf`);
+      } catch (e) {
+        console.warn("TTF nie został załadowany, fallback html2pdf:", e);
+        // Tryb B: html2pdf — zbuduj HTML i wyeksportuj
+        const fallback = document.getElementById("pdf-fallback");
+        fallback.innerHTML = "";
+
+        const h = document.createElement("h2");
+        const delegationVal = delegationNumber.value || "Brak numeru";
+        const todayStrFB = new Date().toLocaleDateString('pl-PL');
+        h.textContent = `POLECENIE WYJAZDU SŁUŻBOWEGO Nr: ${delegationVal}`;
+        h.style.fontSize = "1em";
+        fallback.appendChild(h);
+
+        const tbl = document.createElement("table");
+        const thead = document.createElement("thead");
+        thead.innerHTML = `
+          <tr>
+            <th colspan="7" style="font-size: 0.8em; text-align:left">Imię i nazwisko: ${employeeName.value || "-"}</th>
+            <th colspan="3" style="font-size: 0.8em; text-align:left">Data: ${todayStrFB}</th>
+          </tr>
+          <tr>
+            <th colspan="3" style="font-size: 0.8em">Wyjazd</th>
+            <th colspan="4" style="font-size: 0.8em">Przyjazd</th>
+            <th colspan="3" style="font-size: 0.8em">Koszty przejazdu</th>
+          </tr>
+          <tr>
+<th style="font-size: 0.65em; white-space: nowrap;">Miejscowość</th>
+<th style="font-size: 0.8em; white-space: nowrap;">Data</th>
+<th style="font-size: 0.8em; white-space: nowrap;">Godz.</th>
+<th style="font-size: 0.65em; white-space: nowrap;">Miejscowość</th>
+<th style="font-size: 0.8em; white-space: nowrap;">Data</th>
+<th style="font-size: 0.8em; white-space: nowrap;">Godz.</th>
+<th style="font-size: 0.8em; white-space: nowrap;">Dieta (zł)</th>
+<th style="font-size: 0.8em; white-space: nowrap;">Transport</th>
+<th style="font-size: 0.8em; white-space: nowrap;">Koszt (zł)</th>
+<th style="font-size: 0.8em; white-space: nowrap;">km</th>
+          </tr>`;
+        tbl.appendChild(thead);
+
+        const tbodyEl = document.createElement("tbody");
+        mapped.forEach(m => {
+          const tr = document.createElement("tr");
+          const [fromCity, fromDate, fromTime, toCity, toDate, toTime, transport, cost, km] = m.vals;
+
+          const cells = [
+            fromCity,
+            fromDate,
+            fromTime,
+            toCity,
+            toDate,
+            toTime,
+            (m.diet || 0).toFixed(2).replace('.', ',') + " zł",
+            transport,
+            (parseFloat(cost) || 0).toFixed(2).replace('.', ','),
+            (km === "" || km == null) ? "-" : String(km)
+          ];
+
+tr.innerHTML = cells.map(c => {
+  const style = 'style="font-size: 65%;"';
+  return `<td ${style}>${c || "-"}</td>`;
+}).join("");
+          tbodyEl.appendChild(tr);
+        });
+        tbl.appendChild(tbodyEl);
+        fallback.appendChild(tbl);
+
+        const fmtPLN = (v) => new Intl.NumberFormat('pl-PL', { style: 'currency', currency: 'PLN' }).format(v);
+
+        const summary = document.createElement("div");
+        summary.className = "summary";
+        summary.innerHTML = `
+          <p style="font-size: 0.8em; text-align: left;"><strong>Suma diet:</strong> ${fmtPLN(dietTotal)}</p>
+          <p style="font-size: 0.8em; text-align: left; margin-bottom: 2em; font-style: italic; font-weight: normal;"><strong>Słownie:</strong> ${numberToWordsPL(dietTotal)}</p>
+          <p style="font-size: 0.8em; text-align: left;"><strong>Suma kosztów przejazdu:</strong> ${fmtPLN(travelCostTotal)}</p>
+          <p style="font-size: 0.8em; text-align: left; margin-bottom: 2em; font-style: italic; font-weight: normal;"><strong>Słownie:</strong> ${numberToWordsPL(travelCostTotal)}</p>
+          <p style="font-size: 0.8em; text-align: left;"><strong>RAZEM DO ROZLICZENIA:</strong> ${fmtPLN(totalAmount)}</p>
+          <p style="font-size: 0.8em; text-align: left; margin-bottom: 2em; font-style: italic; font-weight: normal;"><strong>Słownie:</strong> ${numberToWordsPL(totalAmount)}</p>
+          <p ><strong>________________________________________________________________________________________________________________________________________________________________</p>
+          <p style="font-size: 0.8em; text-align: left; margin-bottom: 2em;">Zatwierdzono do wypłaty na kwotę: .......................................................</p>
+          <p style="font-size: 0.8em; text-align: left;">Data: ...........................................    Podpis: ...........................................</p>
+          <p><strong>________________________________________________________________________________________________________________________________________________________________</p>
+          <p style="font-size: 0.8em; text-align: left; margin-bottom: 2em;">Kwituję odbiór kwoty: ...........................................................................</p>
+          <p style="font-size: 0.8em; text-align: left;">Data: ...........................................    Podpis: ...........................................</p>
+        `;
+        fallback.appendChild(summary);
+
+        fallback.style.display = "block";
+        await html2pdf().from(fallback).set({
+          margin: 10,
+          filename: "DEL_" + delegationNumber.value + ".pdf",
+          image: { type: "jpeg", quality: 0.98 },
+          html2canvas: { scale: 2, useCORS: true },
+        }).save();
+        fallback.style.display = "none";
+      }
+    });
+  </script>
 </body>
 </html>
