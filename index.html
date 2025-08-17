@@ -1,95 +1,52 @@
 <!DOCTYPE html>
 <html lang="pl">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Kalkulator Diety Krajowej</title>
-<style>
-  :root{
-    --brand:#2c3e70;
-    --ui-radius:12px;
-    --ui-border:#d0d7de;
-    --ui-bg:#fff;
-    --ui-text:#111;
-    --ring: rgba(44,62,112,.22);
-  }
-  body { font-family: 'Noto Sans', Arial, sans-serif; margin:2em; background:#f5f5f5; text-align:center }
-  h1 { margin-top:.5em; font-size:1.6em }
-  table { width:100%; border-collapse:collapse; margin-bottom:1em; table-layout:fixed; background:#fff }
-  th, td { border:1px solid #ccc; padding:4px; text-align:center; vertical-align:middle; word-wrap:break-word; overflow-wrap:break-word }
-  th { background:var(--brand); color:#fff }
-  .btn { padding:10px 20px; margin:1em 0; font-size:1em; cursor:pointer }
-  #generatePDF { background:#007bff; color:#fff; border:none; border-radius:4px }
-  .logo { max-width:270px; margin:0 auto 20px; display:block }
-  .form-group { margin-bottom:1em }
-  .form-group label { display:block; margin-bottom:.5em; font-weight:700 }
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Kalkulator Diety Krajowej</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --brand:#2c3e70; --ui-radius:12px; --ui-border:#d0d7de; --ui-bg:#fff; --ui-text:#111; --ring: rgba(44,62,112,.22);
+    }
+    body { font-family:'Noto Sans', Arial, sans-serif; margin:2em; background:#f5f5f5; color:#111; }
+    h1 { margin:.5em 0 1em; font-size:1.6em; text-align:center }
+    .actions { text-align:center; margin:.5em 0 1.25em; }
+    .btn { display:inline-block; padding:10px 20px; margin:.3em; font-size:1em; cursor:pointer; border:none; border-radius:6px; }
+    #generatePDF { background:#007bff; color:#fff; }
+    #calcDiet   { background:#16a34a; color:#fff; }
+    #addRowBtn  { background:#475569; color:#fff; }
+    .logo { max-width:270px; margin:0 auto 20px; display:block }
+    .form-group { margin-bottom:1em; max-width:720px; margin-left:auto; margin-right:auto; }
+    .form-group label { display:block; margin-bottom:.5em; font-weight:700 }
 
-  /* inputy/selecty */
-  .form-group :where(input, select),
-  #delegationTable :where(input, select){
-    -webkit-appearance:none; -moz-appearance:none; appearance:none;
-    width:100%; box-sizing:border-box; height:42px;
-    padding:0 12px; margin:0;
-    border:1px solid var(--ui-border); border-radius:var(--ui-radius);
-    background:var(--ui-bg); color:var(--ui-text);
-    font:500 14px/1.2 'Noto Sans', Arial, sans-serif;
-    transition:border-color .15s ease, box-shadow .15s ease;
-  }
-  .form-group :where(input, select):focus,
-  #delegationTable :where(input, select):focus{
-    outline:0; border-color:var(--brand);
-    box-shadow:0 0 0 4px var(--ring);
-  }
-  #delegationTable td{ padding:6px; }
+    /* === SCROLL POZIOMY DLA TABELI === */
+    .table-wrapper { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    /* Wymuś minimalną szerokość, by kolumny się nie zgniatały na telefonach */
+    .table-wrapper table { min-width: 1000px; }
 
-  /* responsywność: tabela → karty */
-  @media (max-width:600px){
-    #delegationTable thead { display:none; }
-    #delegationTable, #delegationTable tbody, #delegationTable tr, #delegationTable td {
-      display:block; width:100%;
+    table { width:100%; border-collapse:collapse; margin:1em auto; table-layout:fixed; background:#fff; max-width:1200px; }
+    th, td { border:1px solid #ccc; padding:6px; text-align:center; vertical-align:middle; word-wrap:break-word; overflow-wrap:break-word }
+    th { background:var(--brand); color:#fff }
+    .form-group :where(input, select), #delegationTable :where(input, select){
+      -webkit-appearance:none; appearance:none; width:100%; box-sizing:border-box; height:42px; padding:0 12px; margin:0;
+      border:1px solid var(--ui-border); border-radius:var(--ui-radius); background:var(--ui-bg); color:var(--ui-text);
+      font:500 14px/1.2 'Noto Sans', Arial, sans-serif; transition:border-color .15s, box-shadow .15s, background-color .15s;
+      box-shadow:inset 0 1px 0 rgba(17,17,17,.03), 0 1px 2px rgba(17,17,17,.03);
     }
-    #delegationTable tr {
-      margin:0 0 12px;
-      border:1px solid #eee;
-      border-radius:8px;
-      overflow:hidden;
-      background:#fff;
-    }
-    #delegationTable td {
-      border:0; border-bottom:1px solid #f0f0f0;
-      padding:10px 12px; text-align:left;
-    }
-    #delegationTable td:last-child{ border-bottom:0; }
-    #delegationTable td::before {
-      content:attr(data-label);
-      display:block;
-      font-size:12px;
-      opacity:.7;
-      margin-bottom:4px;
-    }
-    input, select{ width:100%; font-size:16px; }
-  }
-
-  /* PDF wrapper */
-  .pdf-wrap {
-    width:100%;
-    max-width:100%;
-    aspect-ratio:1 / 1.4142; /* A4 proporcje */
-    position:relative;
-  }
-  .pdf-wrap object,
-  .pdf-wrap iframe,
-  .pdf-wrap embed {
-    position:absolute; inset:0;
-    width:100%; height:100%; border:0;
-  }
-  @media (max-width:600px){
-    .pdf-wrap{ height:100vh; aspect-ratio:auto; }
-  }
-</style>
+    .form-group :where(input, select):hover, #delegationTable :where(input, select):hover{ border-color:#b6bec8; background:#fafafa; }
+    .form-group :where(input, select):focus, #delegationTable :where(input, select):focus{ outline:0; border-color:var(--brand); box-shadow:0 0 0 4px var(--ring); background:#fff; }
+    #delegationTable input[type=number]::-webkit-outer-spin-button, #delegationTable input[type=number]::-webkit-inner-spin-button{ -webkit-appearance:none; margin:0; }
+    #delegationTable input[type=number]{ -moz-appearance:textfield; }
+    #delegationTable :where(input, select):disabled{ background:#f3f4f6; color:#6b7280; cursor:not-allowed; }
+    #msg { max-width:1200px; margin:.5em auto; text-align:center; }
+    .msg-error{ background:#fee2e2; color:#7f1d1d; border:1px solid #fecaca; padding:.75em 1em; border-radius:8px; display:none; }
+    .msg-ok   { background:#ecfdf5; color:#065f46; border:1px solid #a7f3d0; padding:.75em 1em; border-radius:8px; display:none; }
+    .hint { font-size:.85em; text-align:left; max-width:1200px; margin:0 auto; color:#374151}
+  </style>
 </head>
 <body>
-<datalist id="cityList"></datalist>
+  <datalist id="cityList"></datalist>
   <img src="logo.png" alt="Logo" class="logo" />
   <h1>Kalkulator Diety Krajowej</h1>
 
@@ -110,314 +67,337 @@
     <input type="text" id="delegationNumber" placeholder="np. KW/001/2025" />
   </div>
 
-  <table id="delegationTable">
-    <thead>
-      <tr>
-        <th>Miejsce wyjazdu</th>
-        <th>Data</th>
-        <th>Godzina</th>
-        <th>Miejsce przyjazdu</th>
-        <th>Data</th>
-        <th>Godzina</th>
-        <th>Środek lokomocji</th>
-        <th>Koszt przejazdu (zł)</th>
-        <th>km (jeśli prywatne)</th>
-      </tr>
-    </thead>
-    <tbody>
-      <!-- wiersze dynamicznie -->
-    </tbody>
-  </table>
+  <p class="hint">Uzupełnij: w pierwszym wierszu <strong>Data + Godz.</strong> WYJAZDU, w ostatnim wierszu <strong>Data + Godz.</strong> PRZYJAZDU. Diety liczone są wyłącznie po tym zakresie.</p>
 
-  <button class="btn" onclick="addRow()">Dodaj wiersz</button>
-  <button class="btn" id="generatePDF">Wygeneruj PDF</button>
-
-  <!-- kontener PDF -->
-  <div class="pdf-wrap">
-    <div id="pdf-fallback"></div>
+  <!-- === WRAPPER DLA SCROLLU POZIOMEGO === -->
+  <div class="table-wrapper">
+    <table id="delegationTable">
+      <thead>
+        <tr>
+          <th>Miejsce wyjazdu</th>
+          <th>Data</th>
+          <th>Godzina</th>
+          <th>Miejsce przyjazdu</th>
+          <th>Data</th>
+          <th>Godzina</th>
+          <th>Środek lokomocji</th>
+          <th>Koszt przejazdu (zł)</th>
+          <th>km (jeśli prywatne)</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
   </div>
 
-</body>
-</html>
+  <div class="actions">
+    <button class="btn" id="addRowBtn">Dodaj wiersz</button>
+    <button class="btn" id="generatePDF">Wygeneruj PDF</button>
+    <button class="btn" id="calcDiet">Tylko wylicz mi dietę</button>
+  </div>
 
-  <!-- Biblioteki (jsPDF zostawione, choć nieużywane; html2pdf jest wymagany) -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <div id="msg" aria-live="polite">
+    <div id="msgError" class="msg-error"></div>
+    <div id="msgOk" class="msg-ok"></div>
+  </div>
+
+  <div id="pdf-fallback" style="display:none;"></div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js" defer></script>
 
   <script>
-    const tbody = document.querySelector("#delegationTable tbody");
-    const employeeName = document.getElementById("employeeName");
-    const delegationNumber = document.getElementById("delegationNumber");
+    window.addEventListener('DOMContentLoaded', () => {
+      const tbody = document.querySelector("#delegationTable tbody");
+      const employeeName = document.getElementById("employeeName");
+      const delegationNumber = document.getElementById("delegationNumber");
+      const addRowBtn = document.getElementById('addRowBtn');
+      const generateBtn = document.getElementById('generatePDF');
+      const calcBtn = document.getElementById('calcDiet');
+      const msgErr = document.getElementById('msgError');
+      const msgOk = document.getElementById('msgOk');
 
-    employeeName.addEventListener("change", () => {
-      const value = employeeName.value;
-      delegationNumber.value = value ? value.split(" ").map(p => p[0].toUpperCase()).join("") + "/" : "";
-    });
+      function showError(text){ msgOk.style.display='none'; msgErr.textContent=text; msgErr.style.display='block'; }
+      function showOk(text){ msgErr.style.display='none'; msgOk.textContent=text; msgOk.style.display='block'; }
+      function clearMsgs(){ msgErr.style.display='none'; msgOk.style.display='none'; }
 
-    function addRow() {
-      const now = new Date();
-      const today = now.toISOString().split("T")[0];
-      const defaultTime = "08:00";
-      const row = document.createElement("tr");
-      row.innerHTML = `
-        <td><input type="text" list="cityList" value="Pakość" /></td>
-        <td><input type="date" value="${today}" /></td>
-        <td><input type="time" value="${defaultTime}" /></td>
-        <td><input type="text" list="cityList" /></td>
-        <td><input type="date" /></td>
-        <td><input type="time" /></td>
-        <td>
-          <select onchange="toggleKM(this)">
-            <option value="auto służbowe">Auto służbowe</option>
-            <option value="auto prywatne">Auto prywatne</option>
-            <option value="kolej">Transport kolejowy</option>
-            <option value="lotniczy">Transport lotniczy</option>
-          </select>
-        </td>
-        <td><input type="number" step="0.01" value="0" /></td>
-        <td><input type="number" step="0.1" disabled /></td>
-      `;
-      tbody.appendChild(row);
-    }
+      employeeName.addEventListener("change", () => {
+        const value = employeeName.value;
+        delegationNumber.value = value ? value.split(" ").map(p => p[0].toUpperCase()).join("") + "/" : "";
+      });
 
-    function toggleKM(select) {
-      const row = select.closest("tr");
-      const kmInput = row.cells[8].firstElementChild;
-      const costInput = row.cells[7].firstElementChild;
-      if (select.value === "auto prywatne") {
-        kmInput.disabled = false;
-      } else {
-        kmInput.disabled = true;
-        kmInput.value = "";
-      }
-      if (select.value === "auto służbowe") {
-        costInput.value = "0";
-      }
-    }
-
-    // start z 1 wierszem
-    addRow();
-
-    // ---- DATALIST: lista miast ----
-    const cityList = document.getElementById("cityList");
-    const polishCities = [
-      "Warszawa","Kraków","Łódź","Wrocław","Poznań","Gdańsk","Szczecin","Bydgoszcz","Lublin","Katowice","Białystok","Częstochowa","Radom","Toruń","Sosnowiec","Kielce","Rzeszów","Gliwice","Zabrze","Olsztyn","Bielsko-Biała","Bytom","Zielona Góra","Rybnik","Ruda Śląska","Opole","Tychy","Gorzów Wielkopolski","Dąbrowa Górnicza","Elbląg","Płock","Wałbrzych","Włocławek","Tarnów","Chorzów","Koszalin","Legnica","Grudziądz","Słupsk","Jaworzno","Jastrzębie-Zdrój","Nowy Sącz","Jelenia Góra","Konin","Piotrków Trybunalski","Inowrocław","Lubin","Ostrowiec Świętokrzyski","Siemianowice Śląskie","Gniezno","Stalowa Wola","Suwałki","Głogów","Pabianice","Chełm","Zamość","Leszno","Tomaszów Mazowiecki","Przemyśl","Stargard","Mysłowice","Kutno","Ostrów Wielkopolski","Ełk","Tarnowskie Góry","Piła","Świdnica","Mielec","Tczew","Biała Podlaska","Bełchatów","Zgierz","Świętochłowice","Racibórz","Wejherowo","Zawiercie","Kędzierzyn-Koźle","Starachowice","Skierniewice","Skarżysko-Kamienna","Żory","Ostrołęka","Nowa Sól","Knurów","Lębork","Otwock","Krosno","Ciechanów","Kołobrzeg","Świnoujście","Żyrardów","Tarnobrzeg","Śrem","Bochnia","Sopot","Nowy Dwór Mazowiecki","Jarosław","Wodzisław Śląski","Siedlce","Puławy","Czechowice-Dziedzice","Oława","Żywiec","Piekary Śląskie","Malbork","Kwidzyn","Bartoszyce","Brzeg","Dębica","Łomża","Sanok","Chojnice","Bielawa","Kłodzko","Augustów","Nysa","Luboń","Police","Mińsk Mazowiecki","Brodnica","Wągrowiec","Krotoszyn","Turek","Zduńska Wola","Zambrów","Kościerzyna","Gorlice","Lubań","Sandomierz","Krasnystaw","Hrubieszów","Łuków","Strzelce Opolskie","Działdowo","Wieluń","Wyszków","Środa Wielkopolska","Kępno","Złotów","Szczecinek"
-    ];
-    polishCities.forEach(city => {
-      const option = document.createElement("option");
-      option.value = city;
-      cityList.appendChild(option);
-    });
-
-    // ---- Liczby słownie (PL) ----
-    function numberToWordsPL(amount) {
-      const ones = ["", "jeden", "dwa", "trzy", "cztery", "pięć", "sześć", "siedem", "osiem", "dziewięć"];
-      const teens = ["dziesięć", "jedenaście", "dwanaście", "trzynaście", "czternaście", "piętnaście", "szesnaście", "siedemnaście", "osiemnaście", "dziewiętnaście"];
-      const tens = ["", "", "dwadzieścia", "trzydzieści", "czterdzieści", "pięćdziesiąt", "sześćdziesiąt", "siedemdziesiąt", "osiemdziesiąt", "dziewięćdziesiąt"];
-      const hundreds = ["", "sto", "dwieście", "trzysta", "czterysta", "pięćset", "sześćset", "siedemset", "osiemset", "dziewięćset"];
-
-      function toWordsUnder1000(n) {
-        if (n === 0) return "";
-        const h = Math.floor(n / 100);
-        const t = Math.floor((n % 100) / 10);
-        const o = n % 10;
-        let r = [];
-        if (h > 0) r.push(hundreds[h]);
-        if (t === 1 && o > 0) {
-          r.push(teens[o]);
-        } else {
-          if (t > 0) r.push(tens[t]);
-          if (o > 0) r.push(ones[o]);
-        }
-        return r.join(" ");
-      }
-
-      function toWords(n) {
-        if (n === 0) return "zero";
-        const thousands = Math.floor(n / 1000);
-        const rest = n % 1000;
-        let result = [];
-        if (thousands > 0) {
-          if (thousands === 1) {
-            result.push("tysiąc");
+      function addRow() {
+        const now = new Date();
+        const today = now.toISOString().split("T")[0];
+        const defaultTime = "08:00";
+        const row = document.createElement("tr");
+        row.innerHTML = `
+          <td><input type="text" list="cityList" value="Pakość" /></td>
+          <td><input type="date" value="${today}" /></td>
+          <td><input type="time" value="${defaultTime}" /></td>
+          <td><input type="text" list="cityList" /></td>
+          <td><input type="date" /></td>
+          <td><input type="time" /></td>
+          <td>
+            <select>
+              <option value="auto służbowe">Auto służbowe</option>
+              <option value="auto prywatne">Auto prywatne</option>
+              <option value="kolej">Transport kolejowy</option>
+              <option value="lotniczy">Transport lotniczy</option>
+            </select>
+          </td>
+          <td><input type="number" step="0.01" value="0" /></td>
+          <td><input type="number" step="0.1" disabled /></td>
+        `;
+        const select = row.querySelector('select');
+        const kmInput = row.children[8].firstElementChild;
+        const costInput = row.children[7].firstElementChild;
+        select.addEventListener('change', () => {
+          if (select.value === "auto prywatne") {
+            kmInput.disabled = false;
           } else {
-            result.push(toWordsUnder1000(thousands));
-            const lastDigit = thousands % 10;
-            const lastTwo = thousands % 100;
-            if (lastDigit >= 2 && lastDigit <= 4 && !(lastTwo >= 12 && lastTwo <= 14)) {
-              result.push("tysiące");
-            } else {
-              result.push("tysięcy");
-            }
+            kmInput.disabled = true;
+            kmInput.value = "";
+          }
+          if (select.value === "auto służbowe") {
+            costInput.value = "0";
+          }
+        });
+        tbody.appendChild(row);
+      }
+
+      addRowBtn.addEventListener('click', addRow);
+      addRow(); // start z 1 wierszem
+
+      // Datalist
+      const cityList = document.getElementById("cityList");
+      (["Warszawa","Kraków","Łódź","Wrocław","Poznań","Gdańsk","Szczecin","Bydgoszcz","Lublin","Katowice","Białystok","Częstochowa","Radom","Toruń","Sosnowiec","Kielce","Rzeszów","Gliwice","Zabrze","Olsztyn","Bielsko-Biała","Bytom","Zielona Góra","Rybnik","Ruda Śląska","Opole","Tychy","Gorzów Wielkopolski","Dąbrowa Górnicza","Elbląg","Płock","Wałbrzych","Włocławek","Tarnów","Chorzów","Koszalin","Legnica","Grudziądz","Słupsk","Jaworzno","Jastrzębie-Zdrój","Nowy Sącz","Jelenia Góra","Konin","Piotrków Trybunalski","Inowrocław","Lubin","Ostrowiec Świętokrzyski","Siemianowice Śląskie","Gniezno","Stalowa Wola","Suwałki","Głogów","Pabianice","Chełm","Zamość","Leszno","Tomaszów Mazowiecki","Przemyśl","Stargard","Mysłowice","Kutno","Ostrów Wielkopolski","Ełk","Tarnowskie Góry","Piła","Świdnica","Mielec","Tczew","Biała Podlaska","Bełchatów","Zgierz","Świętochłowice","Racibórz","Wejherowo","Zawiercie","Kędzierzyn-Koźle","Starachowice","Skierniewice","Skarżysko-Kamienna","Żory","Ostrołęka","Nowa Sól","Knurów","Lębork","Otwock","Krosno","Ciechanów","Kołobrzeg","Świnoujście","Żyrardów","Tarnobrzeg","Śrem","Bochnia","Sopot","Nowy Dwór Mazowiecki","Jarosław","Wodzisław Śląski","Siedlce","Puławy","Czechowice-Dziedzice","Oława","Żywiec","Piekary Śląskie","Malbork","Kwidzyn","Bartoszyce","Brzeg","Dębica","Łomża","Sanok","Chojnice","Bielawa","Kłodzko","Augustów","Nysa","Luboń","Police","Mińsk Mazowiecki","Brodnica","Wągrowiec","Krotoszyn","Turek","Zduńska Wola","Zambrów","Kościerzyna","Gorlice","Lubań","Sandomierz","Krasnystaw","Hrubieszów","Łuków","Strzelce Opolskie","Działdowo","Wieluń","Wyszków","Środa Wielkopolska","Kępno","Złotów","Szczecinek"]).forEach(city => {
+        const option = document.createElement("option");
+        option.value = city;
+        cityList.appendChild(option);
+      });
+
+      // formatery
+      const fmtPLN = (v) => new Intl.NumberFormat('pl-PL', { style:'currency', currency:'PLN' }).format(v);
+      const fmtDT  = (d) => d ? new Date(d).toLocaleString('pl-PL') : "-";
+
+      // >>> KLUCZ: dieta liczona TYLKO od 1. wyjazdu do ostatniego przyjazdu
+      function computeDelegations() {
+        const rows = Array.from(tbody.querySelectorAll("tr"));
+
+        // suma kosztów przejazdu (wszystkie wiersze)
+        const travelCostTotal = rows.reduce((sum, row) => {
+          const cost = parseFloat(row.cells[7]?.firstElementChild?.value);
+          return sum + (isNaN(cost) ? 0 : cost);
+        }, 0);
+
+        if (!rows.length) {
+          return { mapped:[], travelCostTotal:0, dietTotal:0, totalAmount:0, earliest:null, latest:null, durationH:0, ok:false, reason:"Brak wierszy" };
+        }
+
+        const first = rows[0];
+        const last  = rows[rows.length - 1];
+
+        const fromDate = first.cells[1]?.firstElementChild?.value;
+        const fromTime = first.cells[2]?.firstElementChild?.value;
+        const toDate   = last.cells[4]?.firstElementChild?.value;
+        const toTime   = last.cells[5]?.firstElementChild?.value;
+
+        let earliest = null, latest = null, durationH = 0, ok = true, reason = "";
+
+        if (fromDate && fromTime) earliest = new Date(`${fromDate}T${fromTime}`);
+        if (toDate && toTime)     latest   = new Date(`${toDate}T${toTime}`);
+
+        if (!earliest || !latest) {
+          ok = false;
+          reason = "Uzupełnij pierwszy wiersz (Data+Godz. wyjazdu) i ostatni wiersz (Data+Godz. przyjazdu).";
+        } else if (!(latest > earliest)) {
+          ok = false;
+          reason = "Godzina przyjazdu w ostatnim wierszu musi być późniejsza niż wyjazdu w pierwszym.";
+        } else {
+          durationH = (latest - earliest) / 36e5;
+        }
+
+        // reguły diety dla CAŁOŚCI
+        let dietTotal = 0;
+        if (ok) {
+          if (durationH >= 8 && durationH < 12)      dietTotal = 22.5;
+          else if (durationH >= 12 && durationH < 24) dietTotal = 45.0;
+          else if (durationH >= 24) {
+            dietTotal = 45.0 * Math.floor(durationH / 24)
+                      + (durationH % 24 >= 12 ? 45.0 : (durationH % 24 >= 8 ? 22.5 : 0));
           }
         }
-        if (rest > 0) result.push(toWordsUnder1000(rest));
-        return result.join(" ").trim();
+
+        const mapped = rows.map(row => {
+          const inputs = row.querySelectorAll("input, select");
+          return { vals: Array.from(inputs).map(i => i.value || "-") };
+        });
+
+        const totalAmount = travelCostTotal + dietTotal;
+        return { mapped, travelCostTotal, dietTotal, totalAmount, earliest, latest, durationH, ok, reason };
       }
 
-      const zl = Math.floor(amount);
-      const gr = Math.round((amount - zl) * 100);
+      // Tylko dieta + info o dojazdach
+      calcBtn.addEventListener("click", () => {
+        clearMsgs();
+        const { ok, reason, dietTotal, travelCostTotal, earliest, latest, durationH } = computeDelegations();
 
-      const zlWord =
-        toWords(zl) +
-        (zl === 1
-          ? " złoty"
-          : zl % 10 >= 2 && zl % 10 <= 4 && (zl % 100 < 10 || zl % 100 >= 20)
-          ? " złote"
-          : " złotych");
+        if (!ok) { showError(reason); return; }
 
-      const grWord =
-        gr > 0
-          ? toWords(gr) +
-            (gr === 1
-              ? " grosz"
-              : gr % 10 >= 2 && gr % 10 <= 4 && (gr % 100 < 10 || gr % 100 >= 20)
-              ? " grosze"
-              : " groszy")
-          : "";
+        const dietStr    = (Math.round(dietTotal * 100) / 100).toFixed(2).replace('.', ',');
+        const travelStr  = (Math.round(travelCostTotal * 100) / 100).toFixed(2).replace('.', ',');
+        const zakres     = ` (okres: ${fmtDT(earliest)} – ${fmtDT(latest)}, ${durationH.toFixed(1)} h)`;
 
-      return zlWord + (grWord ? " " + grWord : "");
-    }
+        showOk(`Za wybrane wyjazdy przysługuje ${dietStr} zł${zakres}, a za dojazdy pozostaje do zwrotu ${travelStr} zł`);
+      });
 
-    // ---- Pomocnicze ----
-    const fmtPLN = (v) => new Intl.NumberFormat('pl-PL', { style: 'currency', currency: 'PLN' }).format(v);
+      // PDF (html2pdf)
+      generateBtn.addEventListener("click", async () => {
+        clearMsgs();
+        if (typeof html2pdf === 'undefined') {
+          showError("Nie udało się załadować biblioteki html2pdf z CDN. Odśwież stronę (Ctrl+Shift+R).");
+          return;
+        }
 
-    // (pozostawiamy, choć już nieużywane po usunięciu trybu A)
-    async function loadLogoDataURL(src = 'logo.png') {
-      try {
-        const res = await fetch(src, { cache: 'force-cache' });
-        if (!res.ok) throw new Error('logo fetch failed');
-        const blob = await res.blob();
-        return await new Promise((resolve) => {
-          const r = new FileReader();
-          r.onload = () => resolve(r.result);
-          r.readAsDataURL(blob);
+        const { ok, reason, mapped, travelCostTotal, dietTotal, totalAmount, earliest, latest, durationH } = computeDelegations();
+        if (!ok) { showError(reason); return; }
+
+        const fallback = document.getElementById("pdf-fallback");
+        fallback.innerHTML = "";
+
+        const h = document.createElement("h2");
+        const delegationVal = delegationNumber.value || "Brak numeru";
+        const todayStrFB = new Date().toLocaleDateString('pl-PL');
+        h.textContent = `POLECENIE WYJAZDU SŁUŻBOWEGO Nr: ${delegationVal}`;
+        h.style.fontSize = "1em";
+        fallback.appendChild(h);
+
+       const tbl = document.createElement("table");
+        const thead = document.createElement("thead");
+        thead.innerHTML = `
+          <tr>
+            <th colspan="7" style="font-size: 0.8em; text-align:left">Imię i nazwisko: ${employeeName.value || "-"}</th>
+            <th colspan="3" style="font-size: 0.8em; text-align:left">Data: ${todayStrFB}</th>
+          </tr>
+          <tr>
+            <th colspan="3" style="font-size: 0.8em">Wyjazd</th>
+            <th colspan="4" style="font-size: 0.8em">Przyjazd</th>
+            <th colspan="3" style="font-size: 0.8em">Koszty przejazdu</th>
+          </tr>
+          <tr>
+            <th style="font-size: 0.65em; white-space: nowrap;">Miejscowość</th>
+            <th style="font-size: 0.8em; white-space: nowrap;">Data</th>
+            <th style="font-size: 0.8em; white-space: nowrap;">Godz.</th>
+            <th style="font-size: 0.65em; white-space: nowrap;">Miejscowość</th>
+            <th style="font-size: 0.8em; white-space: nowrap;">Data</th>
+            <th style="font-size: 0.8em; white-space: nowrap;">Godz.</th>
+            <th style="font-size: 0.8em; white-space: nowrap;">Dieta (zł)</th>
+            <th style="font-size: 0.8em; white-space: nowrap;">Transport</th>
+            <th style="font-size: 0.8em; white-space: nowrap;">Koszt (zł)</th>
+            <th style="font-size: 0.8em; white-space: nowrap;">km</th>
+          </tr>`;
+        tbl.appendChild(thead);
+
+        const tbodyEl = document.createElement("tbody");
+        mapped.forEach(m => {
+          const [fromCity, fromDate, fromTime, toCity, toDate, toTime, transport, cost, km] = m.vals;
+          const tr = document.createElement("tr");
+          const cells = [
+            fromCity, fromDate, fromTime,
+            toCity, toDate, toTime,
+            "—", // dieta per wiersz nie jest liczona
+            transport,
+            (parseFloat(cost) || 0).toFixed(2).replace('.', ','),
+            (km === "" || km == null || km === "-") ? "-" : String(km)
+          ];
+          tr.innerHTML = cells.map(c => `<td style="font-size:65%;">${c || "-"}</td>`).join("");
+          tbodyEl.appendChild(tr);
         });
-      } catch { return null; }
-    }
+        tbl.appendChild(tbodyEl);
+        fallback.appendChild(tbl);
 
-    // ---- Generowanie PDF: tylko html2pdf ----
-    document.getElementById("generatePDF").addEventListener("click", async () => {
-      const rows = Array.from(tbody.querySelectorAll("tr"));
-      const mapped = rows.map(row => {
-        const inputs = row.querySelectorAll("input, select");
-        const vals = Array.from(inputs).map(i => i.value || "-");
-        const [fromCity, fromDate, fromTime, toCity, toDate, toTime, transport, cost, km] = vals;
+        const summary = document.createElement("div");
+        summary.className = "summary";
+        summary.innerHTML = `
+          <p style="font-size: 0.85em; text-align: left;"><strong>Suma diet (globalnie):</strong> ${fmtPLN(dietTotal)}</p>
+          <p style="font-size: 0.8em; text-align: left; margin-bottom: 1em; font-style: italic; font-weight: normal;"><strong>Słownie:</strong> ${numberToWordsPL(dietTotal)}</p>
 
-        let durationH = 0;
-        if (fromDate && fromTime && toDate && toTime) {
-          const start = new Date(`${fromDate}T${fromTime}`);
-          const end   = new Date(`${toDate}T${toTime}`);
-          durationH = (end - start) / 36e5;
-          if (!isFinite(durationH) || durationH < 0) durationH = 0;
+          <p style="font-size: 0.85em; text-align: left;"><strong>Suma kosztów przejazdu:</strong> ${fmtPLN(travelCostTotal)}</p>
+          <p style="font-size: 0.8em; text-align: left; margin-bottom: 1em; font-style: italic; font-weight: normal;"><strong>Słownie:</strong> ${numberToWordsPL(travelCostTotal)}</p>
+
+          <p style="font-size: 0.9em; text-align: left;"><strong>RAZEM DO ROZLICZENIA:</strong> ${fmtPLN(travelCostTotal + dietTotal)}</p>
+          <p style="font-size: 0.8em; text-align: left; margin-bottom: 1.5em; font-style: italic; font-weight: normal;"><strong>Słownie:</strong> ${numberToWordsPL(travelCostTotal + dietTotal)}</p>
+
+          <p><strong>________________________________________________________________________________________________________________________________________________________________</strong></p>
+          <p style="font-size: 0.8em; text-align: left; margin-bottom: 2em;">
+            Zatwierdzono do wypłaty na kwotę: ....................................................................................................................
+          </p>
+          <p style="font-size: 0.8em; text-align: left;">
+            Data: ............................................................&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+            Podpis: .....................................................................................
+          </p>
+
+          <p><strong>________________________________________________________________________________________________________________________________________________________________</strong></p>
+          <p style="font-size: 0.8em; text-align: left; margin-bottom: 2em;">
+            Kwituję odbiór kwoty: ..............................................................................................................................
+          </p>
+          <p style="font-size: 0.8em; text-align: left;">
+            Data: ............................................................&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+            Podpis: .....................................................................................
+          </p>
+        `;
+        fallback.appendChild(summary);
+
+        // generuj PDF
+        fallback.style.display = "block";
+        try{
+          await html2pdf().from(fallback).set({
+            margin: 10,
+            filename: "DEL_" + (delegationNumber.value || "bez-numeru") + ".pdf",
+            image: { type: "jpeg", quality: 0.98 },
+            html2canvas: { scale: 2, useCORS: true },
+          }).save();
+          clearMsgs();
+        } catch(err){
+          showError("Błąd generowania PDF: " + (err?.message || err));
+        } finally {
+          fallback.style.display = "none";
         }
-
-        let diet = 0;
-        if (durationH >= 8 && durationH < 12) {
-          diet = 22.5;
-        } else if (durationH >= 12 && durationH < 24) {
-          diet = 45.0;
-        } else if (durationH >= 24) {
-          diet = 45.0 * Math.floor(durationH / 24)
-               + (durationH % 24 >= 12 ? 45.0 : (durationH % 24 >= 8 ? 22.5 : 0));
-        }
-        return { vals, cost: parseFloat(cost)||0, diet };
       });
 
-      const travelCostTotal = mapped.reduce((s,r)=>s+r.cost,0);
-      const dietTotal = mapped.reduce((s,r)=>s+r.diet,0);
-      const totalAmount = travelCostTotal + dietTotal;
-
-      const fallback = document.getElementById("pdf-fallback");
-      fallback.innerHTML = "";
-
-      const h = document.createElement("h2");
-      const delegationVal = delegationNumber.value || "Brak numeru";
-      const todayStrFB = new Date().toLocaleDateString('pl-PL');
-      h.textContent = `POLECENIE WYJAZDU SŁUŻBOWEGO Nr: ${delegationVal}`;
-      h.style.fontSize = "1em";
-      fallback.appendChild(h);
-
-      const tbl = document.createElement("table");
-      const thead = document.createElement("thead");
-      thead.innerHTML = `
-        <tr>
-          <th colspan="7" style="font-size: 0.8em; text-align:left">Imię i nazwisko: ${employeeName.value || "-"}</th>
-          <th colspan="3" style="font-size: 0.8em; text-align:left">Data: ${todayStrFB}</th>
-        </tr>
-        <tr>
-          <th colspan="3" style="font-size: 0.8em">Wyjazd</th>
-          <th colspan="4" style="font-size: 0.8em">Przyjazd</th>
-          <th colspan="3" style="font-size: 0.8em">Koszty przejazdu</th>
-        </tr>
-        <tr>
-          <th style="font-size: 0.65em; white-space: nowrap;">Miejscowość</th>
-          <th style="font-size: 0.8em; white-space: nowrap;">Data</th>
-          <th style="font-size: 0.8em; white-space: nowrap;">Godz.</th>
-          <th style="font-size: 0.65em; white-space: nowrap;">Miejscowość</th>
-          <th style="font-size: 0.8em; white-space: nowrap;">Data</th>
-          <th style="font-size: 0.8em; white-space: nowrap;">Godz.</th>
-          <th style="font-size: 0.8em; white-space: nowrap;">Dieta (zł)</th>
-          <th style="font-size: 0.8em; white-space: nowrap;">Transport</th>
-          <th style="font-size: 0.8em; white-space: nowrap;">Koszt (zł)</th>
-          <th style="font-size: 0.8em; white-space: nowrap;">km</th>
-        </tr>`;
-      tbl.appendChild(thead);
-
-      const tbodyEl = document.createElement("tbody");
-      mapped.forEach(m => {
-        const tr = document.createElement("tr");
-        const [fromCity, fromDate, fromTime, toCity, toDate, toTime, transport, cost, km] = m.vals;
-
-        const cells = [
-          fromCity,
-          fromDate,
-          fromTime,
-          toCity,
-          toDate,
-          toTime,
-          (m.diet || 0).toFixed(2).replace('.', ',') + " zł",
-          transport,
-          (parseFloat(cost) || 0).toFixed(2).replace('.', ','),
-          (km === "" || km == null) ? "-" : String(km)
-        ];
-
-        tr.innerHTML = cells.map(c => {
-          const style = 'style="font-size: 65%;"';
-          return `<td ${style}>${c || "-"}</td>`;
-        }).join("");
-        tbodyEl.appendChild(tr);
-      });
-      tbl.appendChild(tbodyEl);
-      fallback.appendChild(tbl);
-
-      const summary = document.createElement("div");
-      summary.className = "summary";
-      summary.innerHTML = `
-        <p style="font-size: 0.8em; text-align: left;"><strong>Suma diet:</strong> ${fmtPLN(dietTotal)}</p>
-        <p style="font-size: 0.8em; text-align: left; margin-bottom: 2em; font-style: italic; font-weight: normal;"><strong>Słownie:</strong> ${numberToWordsPL(dietTotal)}</p>
-        <p style="font-size: 0.8em; text-align: left;"><strong>Suma kosztów przejazdu:</strong> ${fmtPLN(travelCostTotal)}</p>
-        <p style="font-size: 0.8em; text-align: left; margin-bottom: 2em; font-style: italic; font-weight: normal;"><strong>Słownie:</strong> ${numberToWordsPL(travelCostTotal)}</p>
-        <p style="font-size: 0.8em; text-align: left;"><strong>RAZEM DO ROZLICZENIA:</strong> ${fmtPLN(totalAmount)}</p>
-        <p style="font-size: 0.8em; text-align: left; margin-bottom: 2em; font-style: italic; font-weight: normal;"><strong>Słownie:</strong> ${numberToWordsPL(totalAmount)}</p>
-        <p><strong>________________________________________________________________________________________________________________________________________________________________</strong></p>
-        <p style="font-size: 0.8em; text-align: left; margin-bottom: 2em;">Zatwierdzono do wypłaty na kwotę: .......................................................</p>
-        <p style="font-size: 0.8em; text-align: left;">Data: ...........................................    Podpis: ...........................................</p>
-        <p><strong>________________________________________________________________________________________________________________________________________________________________</strong></p>
-        <p style="font-size: 0.8em; text-align: left; margin-bottom: 2em;">Kwituję odbiór kwoty: ...........................................................................</p>
-        <p style="font-size: 0.8em; text-align: left;">Data: ...........................................    Podpis: ...........................................</p>
-      `;
-      fallback.appendChild(summary);
-
-      fallback.style.display = "block";
-      await html2pdf().from(fallback).set({
-        margin: 10,
-        filename: "DEL_" + delegationNumber.value + ".pdf",
-        image: { type: "jpeg", quality: 0.98 },
-        html2canvas: { scale: 2, useCORS: true },
-      }).save();
-      fallback.style.display = "none";
+      // liczby słownie do PDF
+      function numberToWordsPL(amount) {
+        const ones = ["", "jeden", "dwa", "trzy", "cztery", "pięć", "sześć", "siedem", "osiem", "dziewięć"];
+        const teens = ["dziesięć", "jedenaście", "dwanaście", "trzynaście", "czternaście", "piętnaście", "szesnaście", "siedemnaście", "osiemnaście", "dziewiętnaście"];
+        const tens = ["", "", "dwadzieścia", "trzydzieści", "czterdzieści", "pięćdziesiąt", "sześćdziesiąt", "siedemdziesiąt", "osiemdziesiąt", "dziewięćdziesiąt"];
+        const hundreds = ["", "sto", "dwieście", "trzysta", "czterysta", "pięćset", "sześćset", "siedemset", "osiemset", "dziewięćset"];
+        function toWordsUnder1000(n) {
+          if (n === 0) return "";
+          const h = Math.floor(n / 100), t = Math.floor((n % 100) / 10), o = n % 10;
+          const out = [];
+          if (h > 0) out.push(hundreds[h]);
+          if (t === 1 && o > 0) out.push(teens[o]);
+          else { if (t > 0) out.push(tens[t]); if (o > 0) out.push(ones[o]); }
+          return out.join(" ");
+        }
+        function toWords(n) {
+          if (n === 0) return "zero";
+          const thousands = Math.floor(n / 1000), rest = n % 1000, out = [];
+          if (thousands > 0) {
+            if (thousands === 1) out.push("tysiąc");
+            else {
+              out.push(toWordsUnder1000(thousands));
+              const lastDigit = thousands % 10, lastTwo = thousands % 100;
+              out.push(lastDigit >= 2 && lastDigit <= 4 && !(lastTwo >= 12 && lastTwo <= 14) ? "tysiące" : "tysięcy");
+            }
+          }
+          if (rest > 0) out.push(toWordsUnder1000(rest));
+          return out.join(" ").trim();
+        }
+        const zl = Math.floor(amount), gr = Math.round((amount - zl) * 100);
+        const zlWord = toWords(zl) + (zl === 1 ? " złoty" : zl % 10 >= 2 && zl % 10 <= 4 && (zl % 100 < 10 || zl % 100 >= 20) ? " złote" : " złotych");
+        const grWord = gr > 0 ? toWords(gr) + (gr === 1 ? " grosz" : gr % 10 >= 2 && gr % 10 <= 4 && (gr % 100 < 10 || gr % 100 >= 20) ? " grosze" : " groszy") : "";
+        return zlWord + (grWord ? " " + grWord : "");
+      }
     });
   </script>
 </body>
