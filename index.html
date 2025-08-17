@@ -5,14 +5,14 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Kalkulator Diety Krajowej</title>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;700&display=swap" rel="stylesheet">
-  <style>
+    <style>
     :root{
       --brand:#2c3e70; --ui-radius:12px; --ui-border:#d0d7de; --ui-bg:#fff; --ui-text:#111; --ring: rgba(44,62,112,.22);
     }
     body { font-family:'Noto Sans', Arial, sans-serif; margin:2em; background:#f5f5f5; color:#111; }
-    h1 { margin:.5em 0 1em; font-size:1.6em; text-align:center }
+    h1 { margin:.5em 0 1em; font-size:2em; text-align:center }
     .actions { text-align:center; margin:.5em 0 1.25em; }
-    .btn { display:inline-block; padding:10px 20px; margin:.3em; font-size:1em; cursor:pointer; border:none; border-radius:6px; }
+    .btn { display:inline-block; padding:12px 24px; margin:.3em; font-size:1.1em; cursor:pointer; border:none; border-radius:6px; }
     #generatePDF { background:#007bff; color:#fff; }
     #calcDiet   { background:#16a34a; color:#fff; }
     #addRowBtn  { background:#475569; color:#fff; }
@@ -25,13 +25,13 @@
     .table-wrapper table { min-width: 1000px; }
 
     table { width:100%; border-collapse:collapse; margin:1em auto; table-layout:fixed; background:#fff; max-width:1200px; }
-    th, td { border:1px solid #ccc; padding:6px; text-align:center; vertical-align:middle; word-wrap:break-word; overflow-wrap:break-word; font-size:0.9em; }
-    th { background:var(--brand); color:#fff; font-size:0.9em; }
+    th, td { border:1px solid #ccc; padding:8px; text-align:center; vertical-align:middle; word-wrap:break-word; overflow-wrap:break-word; font-size:1em; }
+    th { background:var(--brand); color:#fff; font-size:1em; }
 
     .form-group :where(input, select), #delegationTable :where(input, select){
-      -webkit-appearance:none; appearance:none; width:100%; box-sizing:border-box; height:36px; padding:0 8px; margin:0;
+      -webkit-appearance:none; appearance:none; width:100%; box-sizing:border-box; height:38px; padding:0 10px; margin:0;
       border:1px solid var(--ui-border); border-radius:var(--ui-radius); background:var(--ui-bg); color:var(--ui-text);
-      font:500 13px/1.2 'Noto Sans', Arial, sans-serif; transition:border-color .15s, box-shadow .15s, background-color .15s;
+      font:500 14px/1.3 'Noto Sans', Arial, sans-serif; transition:border-color .15s, box-shadow .15s, background-color .15s;
       box-shadow:inset 0 1px 0 rgba(17,17,17,.03), 0 1px 2px rgba(17,17,17,.03);
     }
     .form-group :where(input, select):hover, #delegationTable :where(input, select):hover{ border-color:#b6bec8; background:#fafafa; }
@@ -44,19 +44,18 @@
     #msg { max-width:1200px; margin:.5em auto; text-align:center; }
     .msg-error{ background:#fee2e2; color:#7f1d1d; border:1px solid #fecaca; padding:.75em 1em; border-radius:8px; display:none; }
     .msg-ok   { background:#ecfdf5; color:#065f46; border:1px solid #a7f3d0; padding:.75em 1em; border-radius:8px; display:none; }
-    .hint { font-size:.85em; text-align:left; max-width:1200px; margin:0 auto; color:#374151}
+    .hint { font-size:.95em; text-align:left; max-width:1200px; margin:0 auto; color:#374151}
 
-    /* Dedykowane style do PDF (mniejsza czcionka) */
+    /* Dedykowane style do PDF (mniejsza czcionka i kompresja, żeby nie obcinało wierszy) */
     @media print {
-      table th, table td { font-size:0.6em !important; padding:3px !important; }
-      h2, h1 { font-size:1em !important; }
-      p { font-size:0.7em !important; }
+      table th, table td { font-size:0.55em !important; padding:2px !important; }
+      h2, h1 { font-size:0.9em !important; }
+      p { font-size:0.65em !important; }
     }
 
-    #pdf-fallback table th, #pdf-fallback table td { font-size:0.6em !important; padding:3px !important; }
+    #pdf-fallback table th, #pdf-fallback table td { font-size:0.55em !important; padding:2px !important; }
     #pdf-fallback h2 { font-size:0.9em !important; }
-    #pdf-fallback p { font-size:0.7em !important; }
-    }
+    #pdf-fallback p { font-size:0.65em !important; }
   </style>
 </head>
 <body>
