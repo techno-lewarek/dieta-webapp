@@ -2,10 +2,10 @@
 <html lang="pl">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
   <title>Kalkulator Diety Krajowej</title>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;700&display=swap" rel="stylesheet">
-    <style>
+  <style>
     :root{
       --brand:#2c3e70; --ui-radius:12px; --ui-border:#d0d7de; --ui-bg:#fff; --ui-text:#111; --ring: rgba(44,62,112,.22);
     }
@@ -46,19 +46,67 @@
     .msg-ok   { background:#ecfdf5; color:#065f46; border:1px solid #a7f3d0; padding:.75em 1em; border-radius:8px; display:none; }
     .hint { font-size:.95em; text-align:left; max-width:1200px; margin:0 auto; color:#374151}
 
-    /* Dedykowane style do PDF (mniejsza czcionka i kompresja, żeby nie obcinało wierszy) */
+    /* Dedykowane style do PDF (mniejsza czcionka i kompresja, pełna szerokość + skalowanie) */
     @media print {
+      html, body { margin:0; padding:0; width:100% !important; }
+      body { transform: scale(0.95); transform-origin: top left; width:105%; }
+      table { width:100% !important; table-layout:auto !important; }
       table th, table td { font-size:0.55em !important; padding:2px !important; }
       h2, h1 { font-size:0.9em !important; }
       p { font-size:0.65em !important; }
     }
 
+    #pdf-fallback { margin:0 !important; padding:0 !important; width:100% !important; }
+    #pdf-fallback table { width:100% !important; margin:0 auto !important; table-layout:auto !important; }
     #pdf-fallback table th, #pdf-fallback table td { font-size:0.55em !important; padding:2px !important; }
-    #pdf-fallback h2 { font-size:0.9em !important; }
-    #pdf-fallback p { font-size:0.65em !important; }
+    #pdf-fallback h2 { font-size:0.9em !important; text-align:left; }
+    #pdf-fallback p { font-size:0.65em !important; text-align:left; }
+    /* Kontener treści PDF – skalujemy go proporcjonalnie do szerokości/wysokości strony */
+    #pdf-content { width:190mm; transform-origin: top left; }
   </style>
-</head>
 <body>
+  <div id="pdf-fallback" style="display:none;"></div>
+
+  <script>
+    // Uniwersalne skalowanie PDF: dopasuj do SZEROKOŚCI i WYSOKOŚCI strony A4, bez pustych marginesów po lewej na telefonie
+    // Użycie: po zbudowaniu #pdf-content i wstawieniu go do #pdf-fallback, wywołaj: scaleAndSavePDF('DEL_123.pdf')
+    async function scaleAndSavePDF(filename){
+      const fallback = document.getElementById('pdf-fallback');
+      const root = document.getElementById('pdf-content');
+      if(!fallback || !root){ console.warn('Brak kontenera PDF (#pdf-fallback / #pdf-content)'); return; }
+
+      // Pokaż, aby poprawnie zmierzyć rozmiar
+      const prevDisplay = fallback.style.display;
+      fallback.style.display = 'block';
+
+      // Oblicz skalę na podstawie dostępnej szerokości i wysokości
+      const pxPerMm = 96 / 25.4; // 96dpi
+      const pageWmm = 210, pageHmm = 297, marginsMm = 20; // A4, 10mm marginesu dookoła (jsPDF margin:10)
+      const availWpx = (pageWmm - marginsMm) * pxPerMm;
+      const availHpx = (pageHmm - marginsMm) * pxPerMm;
+      const contentW = root.scrollWidth;
+      const contentH = root.scrollHeight;
+      const scaleW = availWpx / contentW;
+      const scaleH = availHpx / contentH;
+      const scale = Math.min(1, scaleW, scaleH); // nie powiększaj ponad 100%
+
+      root.style.transform = `scale(${scale})`;
+      root.style.transformOrigin = 'top left';
+
+      try{
+        await html2pdf().from(fallback).set({
+          margin: 10,
+          filename: filename || 'DEL.pdf',
+          image: { type: 'jpeg', quality: 0.98 },
+          html2canvas: { scale: 2, useCORS: true },
+          jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+        }).save();
+      } finally {
+        // Przywróć widoczność i skalę po zapisie
+        root.style.transform = '';
+        fallback.style.display = prevDisplay || 'none';
+      }
+    }
   <datalist id="cityList"></datalist>
   <img src="logo.png" alt="Logo" class="logo" />
   <h1>Kalkulator Diety Krajowej</h1>
