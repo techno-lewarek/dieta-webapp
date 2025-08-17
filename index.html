@@ -6,9 +6,7 @@
   <title>Kalkulator Diety Krajowej</title>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;700&display=swap" rel="stylesheet">
   <style>
-    :root{
-      --brand:#2c3e70; --ui-radius:12px; --ui-border:#d0d7de; --ui-bg:#fff; --ui-text:#111; --ring: rgba(44,62,112,.22);
-    }
+    :root{ --brand:#2c3e70; --ui-radius:12px; --ui-border:#d0d7de; --ui-bg:#fff; --ui-text:#111; --ring: rgba(44,62,112,.22); }
     body { font-family:'Noto Sans', Arial, sans-serif; margin:2em; background:#f5f5f5; color:#111; }
     h1 { margin:.5em 0 1em; font-size:1.6em; text-align:center }
     .actions { text-align:center; margin:.5em 0 1.25em; }
@@ -22,7 +20,6 @@
 
     /* === SCROLL POZIOMY DLA TABELI === */
     .table-wrapper { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-    /* Wymuś minimalną szerokość, by kolumny się nie zgniatały na telefonach */
     .table-wrapper table { min-width: 1000px; }
 
     table { width:100%; border-collapse:collapse; margin:1em auto; table-layout:fixed; background:#fff; max-width:1200px; }
@@ -43,6 +40,15 @@
     .msg-error{ background:#fee2e2; color:#7f1d1d; border:1px solid #fecaca; padding:.75em 1em; border-radius:8px; display:none; }
     .msg-ok   { background:#ecfdf5; color:#065f46; border:1px solid #a7f3d0; padding:.75em 1em; border-radius:8px; display:none; }
     .hint { font-size:.85em; text-align:left; max-width:1200px; margin:0 auto; color:#374151}
+
+    /* === PDF kompaktowy: mniejsza baza, ciaśniejsze komórki, szerokość treści 190mm === */
+    #pdf-fallback { font-size: 12px; }
+    #pdf-fallback table { width: 100%; border-collapse: collapse; }
+    #pdf-fallback th, #pdf-fallback td { padding: 4px; }
+    @media (max-width: 640px){
+      #pdf-fallback { font-size: 11px; }
+      #pdf-fallback th, #pdf-fallback td { padding: 3px; }
+    }
   </style>
 </head>
 <body>
@@ -69,7 +75,6 @@
 
   <p class="hint">Uzupełnij: w pierwszym wierszu <strong>Data + Godz.</strong> WYJAZDU, w ostatnim wierszu <strong>Data + Godz.</strong> PRZYJAZDU. Diety liczone są wyłącznie po tym zakresie.</p>
 
-  <!-- === WRAPPER DLA SCROLLU POZIOMEGO === -->
   <div class="table-wrapper">
     <table id="delegationTable">
       <thead>
@@ -183,7 +188,6 @@
       function computeDelegations() {
         const rows = Array.from(tbody.querySelectorAll("tr"));
 
-        // suma kosztów przejazdu (wszystkie wiersze)
         const travelCostTotal = rows.reduce((sum, row) => {
           const cost = parseFloat(row.cells[7]?.firstElementChild?.value);
           return sum + (isNaN(cost) ? 0 : cost);
@@ -216,7 +220,6 @@
           durationH = (latest - earliest) / 36e5;
         }
 
-        // reguły diety dla CAŁOŚCI
         let dietTotal = 0;
         if (ok) {
           if (durationH >= 8 && durationH < 12)      dietTotal = 22.5;
@@ -236,17 +239,13 @@
         return { mapped, travelCostTotal, dietTotal, totalAmount, earliest, latest, durationH, ok, reason };
       }
 
-      // Tylko dieta + info o dojazdach
       calcBtn.addEventListener("click", () => {
         clearMsgs();
         const { ok, reason, dietTotal, travelCostTotal, earliest, latest, durationH } = computeDelegations();
-
         if (!ok) { showError(reason); return; }
-
         const dietStr    = (Math.round(dietTotal * 100) / 100).toFixed(2).replace('.', ',');
         const travelStr  = (Math.round(travelCostTotal * 100) / 100).toFixed(2).replace('.', ',');
         const zakres     = ` (okres: ${fmtDT(earliest)} – ${fmtDT(latest)}, ${durationH.toFixed(1)} h)`;
-
         showOk(`Za wybrane wyjazdy przysługuje ${dietStr} zł${zakres}, a za dojazdy pozostaje do zwrotu ${travelStr} zł`);
       });
 
@@ -258,20 +257,25 @@
           return;
         }
 
-        const { ok, reason, mapped, travelCostTotal, dietTotal, totalAmount, earliest, latest, durationH } = computeDelegations();
+        const { ok, reason, mapped, travelCostTotal, dietTotal } = computeDelegations();
         if (!ok) { showError(reason); return; }
 
         const fallback = document.getElementById("pdf-fallback");
         fallback.innerHTML = "";
+
+        // Wewnętrzny root skalowany do rozmiaru A4 (minus marginesy)
+        const root = document.createElement("div");
+        root.id = "pdf-content";
+        root.style.width = "190mm"; // 210mm - 20mm marginesu (10mm po bokach)
 
         const h = document.createElement("h2");
         const delegationVal = delegationNumber.value || "Brak numeru";
         const todayStrFB = new Date().toLocaleDateString('pl-PL');
         h.textContent = `POLECENIE WYJAZDU SŁUŻBOWEGO Nr: ${delegationVal}`;
         h.style.fontSize = "1em";
-        fallback.appendChild(h);
+        root.appendChild(h);
 
-       const tbl = document.createElement("table");
+        const tbl = document.createElement("table");
         const thead = document.createElement("thead");
         thead.innerHTML = `
           <tr>
@@ -304,7 +308,7 @@
           const cells = [
             fromCity, fromDate, fromTime,
             toCity, toDate, toTime,
-            "—", // dieta per wiersz nie jest liczona
+            "—",
             transport,
             (parseFloat(cost) || 0).toFixed(2).replace('.', ','),
             (km === "" || km == null || km === "-") ? "-" : String(km)
@@ -313,7 +317,7 @@
           tbodyEl.appendChild(tr);
         });
         tbl.appendChild(tbodyEl);
-        fallback.appendChild(tbl);
+        root.appendChild(tbl);
 
         const summary = document.createElement("div");
         summary.className = "summary";
@@ -345,22 +349,36 @@
             Podpis: .....................................................................................
           </p>
         `;
-        fallback.appendChild(summary);
+        root.appendChild(summary);
 
-        // generuj PDF
+        // Podłącz i pokaż
+        fallback.appendChild(root);
         fallback.style.display = "block";
+
+        // --- SKALOWANIE do jednej strony A4 ---
+        const pxPerMm = 96 / 25.4;    // CSS px przy 96dpi
+        const pageHeightMm = 297;     // A4 (portret)
+        const marginsMm = 20;         // 10mm góra/dół jak w opcjach html2pdf
+        const availablePx = (pageHeightMm - marginsMm) * pxPerMm;
+        const contentHeight = root.scrollHeight; // wysokość treści w px
+        const scale = Math.min(1, availablePx / contentHeight);
+        root.style.transformOrigin = 'top left';
+        root.style.transform = `scale(${scale})`;
+
         try{
           await html2pdf().from(fallback).set({
             margin: 10,
             filename: "DEL_" + (delegationNumber.value || "bez-numeru") + ".pdf",
             image: { type: "jpeg", quality: 0.98 },
             html2canvas: { scale: 2, useCORS: true },
+            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
           }).save();
           clearMsgs();
         } catch(err){
           showError("Błąd generowania PDF: " + (err?.message || err));
         } finally {
           fallback.style.display = "none";
+          root.style.transform = '';
         }
       });
 
@@ -370,29 +388,8 @@
         const teens = ["dziesięć", "jedenaście", "dwanaście", "trzynaście", "czternaście", "piętnaście", "szesnaście", "siedemnaście", "osiemnaście", "dziewiętnaście"];
         const tens = ["", "", "dwadzieścia", "trzydzieści", "czterdzieści", "pięćdziesiąt", "sześćdziesiąt", "siedemdziesiąt", "osiemdziesiąt", "dziewięćdziesiąt"];
         const hundreds = ["", "sto", "dwieście", "trzysta", "czterysta", "pięćset", "sześćset", "siedemset", "osiemset", "dziewięćset"];
-        function toWordsUnder1000(n) {
-          if (n === 0) return "";
-          const h = Math.floor(n / 100), t = Math.floor((n % 100) / 10), o = n % 10;
-          const out = [];
-          if (h > 0) out.push(hundreds[h]);
-          if (t === 1 && o > 0) out.push(teens[o]);
-          else { if (t > 0) out.push(tens[t]); if (o > 0) out.push(ones[o]); }
-          return out.join(" ");
-        }
-        function toWords(n) {
-          if (n === 0) return "zero";
-          const thousands = Math.floor(n / 1000), rest = n % 1000, out = [];
-          if (thousands > 0) {
-            if (thousands === 1) out.push("tysiąc");
-            else {
-              out.push(toWordsUnder1000(thousands));
-              const lastDigit = thousands % 10, lastTwo = thousands % 100;
-              out.push(lastDigit >= 2 && lastDigit <= 4 && !(lastTwo >= 12 && lastTwo <= 14) ? "tysiące" : "tysięcy");
-            }
-          }
-          if (rest > 0) out.push(toWordsUnder1000(rest));
-          return out.join(" ").trim();
-        }
+        function toWordsUnder1000(n) { if (n === 0) return ""; const h = Math.floor(n / 100), t = Math.floor((n % 100) / 10), o = n % 10; const out = []; if (h > 0) out.push(hundreds[h]); if (t === 1 && o > 0) out.push(teens[o]); else { if (t > 0) out.push(tens[t]); if (o > 0) out.push(ones[o]); } return out.join(" "); }
+        function toWords(n) { if (n === 0) return "zero"; const thousands = Math.floor(n / 1000), rest = n % 1000, out = []; if (thousands > 0) { if (thousands === 1) out.push("tysiąc"); else { out.push(toWordsUnder1000(thousands)); const lastDigit = thousands % 10, lastTwo = thousands % 100; out.push(lastDigit >= 2 && lastDigit <= 4 && !(lastTwo >= 12 && lastTwo <= 14) ? "tysiące" : "tysięcy"); } } if (rest > 0) out.push(toWordsUnder1000(rest)); return out.join(" ").trim(); }
         const zl = Math.floor(amount), gr = Math.round((amount - zl) * 100);
         const zlWord = toWords(zl) + (zl === 1 ? " złoty" : zl % 10 >= 2 && zl % 10 <= 4 && (zl % 100 < 10 || zl % 100 >= 20) ? " złote" : " złotych");
         const grWord = gr > 0 ? toWords(gr) + (gr === 1 ? " grosz" : gr % 10 >= 2 && gr % 10 <= 4 && (gr % 100 < 10 || gr % 100 >= 20) ? " grosze" : " groszy") : "";
