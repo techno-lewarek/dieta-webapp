@@ -5,14 +5,14 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Kalkulator Diety Krajowej</title>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;700&display=swap" rel="stylesheet">
-  <style>
+    <style>
     :root{
       --brand:#2c3e70; --ui-radius:12px; --ui-border:#d0d7de; --ui-bg:#fff; --ui-text:#111; --ring: rgba(44,62,112,.22);
     }
     body { font-family:'Noto Sans', Arial, sans-serif; margin:2em; background:#f5f5f5; color:#111; }
     h1 { margin:.5em 0 1em; font-size:2em; text-align:center }
     .actions { text-align:center; margin:.5em 0 1.25em; }
-    .btn { display:inline-block; padding:12px 24px; margin:.3em; font-size:1.05em; cursor:pointer; border:none; border-radius:6px; }
+    .btn { display:inline-block; padding:12px 24px; margin:.3em; font-size:1.1em; cursor:pointer; border:none; border-radius:6px; }
     #generatePDF { background:#007bff; color:#fff; }
     #calcDiet   { background:#16a34a; color:#fff; }
     #addRowBtn  { background:#475569; color:#fff; }
@@ -36,6 +36,7 @@
     }
     .form-group :where(input, select):hover, #delegationTable :where(input, select):hover{ border-color:#b6bec8; background:#fafafa; }
     .form-group :where(input, select):focus, #delegationTable :where(input, select):focus{ outline:0; border-color:var(--brand); box-shadow:0 0 0 4px var(--ring); background:#fff; }
+
     #delegationTable input[type=number]::-webkit-outer-spin-button, #delegationTable input[type=number]::-webkit-inner-spin-button{ -webkit-appearance:none; margin:0; }
     #delegationTable input[type=number]{ -moz-appearance:textfield; }
     #delegationTable :where(input, select):disabled{ background:#f3f4f6; color:#6b7280; cursor:not-allowed; }
@@ -45,14 +46,16 @@
     .msg-ok   { background:#ecfdf5; color:#065f46; border:1px solid #a7f3d0; padding:.75em 1em; border-radius:8px; display:none; }
     .hint { font-size:.95em; text-align:left; max-width:1200px; margin:0 auto; color:#374151}
 
-    /* === PDF: powtarzany nagłówek, unikanie cięcia wierszy, normalne marginesy A4 === */
-    #pdf-fallback { width:100%; }
-    #pdf-content { width:190mm; margin:0 auto; }
-    #pdf-content table { width:100%; border-collapse: collapse; }
-    #pdf-content thead { display: table-header-group; }
-    #pdf-content tfoot { display: table-footer-group; }
-    #pdf-content tr { page-break-inside: avoid; break-inside: avoid; }
-    .html2pdf__page-break { page-break-before: always; break-before: page; }
+    /* Dedykowane style do PDF (mniejsza czcionka i kompresja, żeby nie obcinało wierszy) */
+    @media print {
+      table th, table td { font-size:0.55em !important; padding:2px !important; }
+      h2, h1 { font-size:0.9em !important; }
+      p { font-size:0.65em !important; }
+    }
+
+    #pdf-fallback table th, #pdf-fallback table td { font-size:0.55em !important; padding:2px !important; }
+    #pdf-fallback h2 { font-size:0.9em !important; }
+    #pdf-fallback p { font-size:0.65em !important; }
   </style>
 </head>
 <body>
@@ -79,7 +82,6 @@
 
   <p class="hint">Uzupełnij: w pierwszym wierszu <strong>Data + Godz.</strong> WYJAZDU, w ostatnim wierszu <strong>Data + Godz.</strong> PRZYJAZDU. Diety liczone są wyłącznie po tym zakresie.</p>
 
-  <!-- WRAPPER dla scrollu poziomego -->
   <div class="table-wrapper">
     <table id="delegationTable">
       <thead>
@@ -110,16 +112,15 @@
     <div id="msgOk" class="msg-ok"></div>
   </div>
 
-  <!-- Obszar roboczy do budowania PDF -->
   <div id="pdf-fallback" style="display:none;"></div>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js" defer></script>
 
   <script>
     window.addEventListener('DOMContentLoaded', () => {
-      const tbody = document.querySelector('#delegationTable tbody');
-      const employeeName = document.getElementById('employeeName');
-      const delegationNumber = document.getElementById('delegationNumber');
+      const tbody = document.querySelector("#delegationTable tbody");
+      const employeeName = document.getElementById("employeeName");
+      const delegationNumber = document.getElementById("delegationNumber");
       const addRowBtn = document.getElementById('addRowBtn');
       const generateBtn = document.getElementById('generatePDF');
       const calcBtn = document.getElementById('calcDiet');
@@ -130,16 +131,16 @@
       function showOk(text){ msgErr.style.display='none'; msgOk.textContent=text; msgOk.style.display='block'; }
       function clearMsgs(){ msgErr.style.display='none'; msgOk.style.display='none'; }
 
-      employeeName.addEventListener('change', () => {
+      employeeName.addEventListener("change", () => {
         const value = employeeName.value;
-        delegationNumber.value = value ? value.split(' ').map(p => p[0].toUpperCase()).join('') + '/' : '';
+        delegationNumber.value = value ? value.split(" ").map(p => p[0].toUpperCase()).join("") + "/" : "";
       });
 
-      function addRow(){
+      function addRow() {
         const now = new Date();
-        const today = now.toISOString().split('T')[0];
-        const defaultTime = '08:00';
-        const row = document.createElement('tr');
+        const today = now.toISOString().split("T")[0];
+        const defaultTime = "08:00";
+        const row = document.createElement("tr");
         row.innerHTML = `
           <td><input type="text" list="cityList" value="Pakość" /></td>
           <td><input type="date" value="${today}" /></td>
@@ -162,14 +163,14 @@
         const kmInput = row.children[8].firstElementChild;
         const costInput = row.children[7].firstElementChild;
         select.addEventListener('change', () => {
-          if (select.value === 'auto prywatne') {
+          if (select.value === "auto prywatne") {
             kmInput.disabled = false;
           } else {
             kmInput.disabled = true;
-            kmInput.value = '';
+            kmInput.value = "";
           }
-          if (select.value === 'auto służbowe') {
-            costInput.value = '0';
+          if (select.value === "auto służbowe") {
+            costInput.value = "0";
           }
         });
         tbody.appendChild(row);
@@ -178,21 +179,21 @@
       addRowBtn.addEventListener('click', addRow);
       addRow(); // start z 1 wierszem
 
-      // Datalist miast
-      const cityList = document.getElementById('cityList');
+      // Datalist
+      const cityList = document.getElementById("cityList");
       (["Warszawa","Kraków","Łódź","Wrocław","Poznań","Gdańsk","Szczecin","Bydgoszcz","Lublin","Katowice","Białystok","Częstochowa","Radom","Toruń","Sosnowiec","Kielce","Rzeszów","Gliwice","Zabrze","Olsztyn","Bielsko-Biała","Bytom","Zielona Góra","Rybnik","Ruda Śląska","Opole","Tychy","Gorzów Wielkopolski","Dąbrowa Górnicza","Elbląg","Płock","Wałbrzych","Włocławek","Tarnów","Chorzów","Koszalin","Legnica","Grudziądz","Słupsk","Jaworzno","Jastrzębie-Zdrój","Nowy Sącz","Jelenia Góra","Konin","Piotrków Trybunalski","Inowrocław","Lubin","Ostrowiec Świętokrzyski","Siemianowice Śląskie","Gniezno","Stalowa Wola","Suwałki","Głogów","Pabianice","Chełm","Zamość","Leszno","Tomaszów Mazowiecki","Przemyśl","Stargard","Mysłowice","Kutno","Ostrów Wielkopolski","Ełk","Tarnowskie Góry","Piła","Świdnica","Mielec","Tczew","Biała Podlaska","Bełchatów","Zgierz","Świętochłowice","Racibórz","Wejherowo","Zawiercie","Kędzierzyn-Koźle","Starachowice","Skierniewice","Skarżysko-Kamienna","Żory","Ostrołęka","Nowa Sól","Knurów","Lębork","Otwock","Krosno","Ciechanów","Kołobrzeg","Świnoujście","Żyrardów","Tarnobrzeg","Śrem","Bochnia","Sopot","Nowy Dwór Mazowiecki","Jarosław","Wodzisław Śląski","Siedlce","Puławy","Czechowice-Dziedzice","Oława","Żywiec","Piekary Śląskie","Malbork","Kwidzyn","Bartoszyce","Brzeg","Dębica","Łomża","Sanok","Chojnice","Bielawa","Kłodzko","Augustów","Nysa","Luboń","Police","Mińsk Mazowiecki","Brodnica","Wągrowiec","Krotoszyn","Turek","Zduńska Wola","Zambrów","Kościerzyna","Gorlice","Lubań","Sandomierz","Krasnystaw","Hrubieszów","Łuków","Strzelce Opolskie","Działdowo","Wieluń","Wyszków","Środa Wielkopolska","Kępno","Złotów","Szczecinek"]).forEach(city => {
-        const option = document.createElement('option');
+        const option = document.createElement("option");
         option.value = city;
         cityList.appendChild(option);
       });
 
       // formatery
       const fmtPLN = (v) => new Intl.NumberFormat('pl-PL', { style:'currency', currency:'PLN' }).format(v);
-      const fmtDT  = (d) => d ? new Date(d).toLocaleString('pl-PL') : '-';
+      const fmtDT  = (d) => d ? new Date(d).toLocaleString('pl-PL') : "-";
 
       // >>> KLUCZ: dieta liczona TYLKO od 1. wyjazdu do ostatniego przyjazdu
-      function computeDelegations(){
-        const rows = Array.from(tbody.querySelectorAll('tr'));
+      function computeDelegations() {
+        const rows = Array.from(tbody.querySelectorAll("tr"));
 
         const travelCostTotal = rows.reduce((sum, row) => {
           const cost = parseFloat(row.cells[7]?.firstElementChild?.value);
@@ -200,7 +201,7 @@
         }, 0);
 
         if (!rows.length) {
-          return { mapped:[], travelCostTotal:0, dietTotal:0, totalAmount:0, earliest:null, latest:null, durationH:0, ok:false, reason:'Brak wierszy' };
+          return { mapped:[], travelCostTotal:0, dietTotal:0, totalAmount:0, earliest:null, latest:null, durationH:0, ok:false, reason:"Brak wierszy" };
         }
 
         const first = rows[0];
@@ -211,22 +212,21 @@
         const toDate   = last.cells[4]?.firstElementChild?.value;
         const toTime   = last.cells[5]?.firstElementChild?.value;
 
-        let earliest = null, latest = null, durationH = 0, ok = true, reason = '';
+        let earliest = null, latest = null, durationH = 0, ok = true, reason = "";
 
         if (fromDate && fromTime) earliest = new Date(`${fromDate}T${fromTime}`);
         if (toDate && toTime)     latest   = new Date(`${toDate}T${toTime}`);
 
         if (!earliest || !latest) {
           ok = false;
-          reason = 'Uzupełnij pierwszy wiersz (Data+Godz. wyjazdu) i ostatni wiersz (Data+Godz. przyjazdu).';
+          reason = "Uzupełnij pierwszy wiersz (Data+Godz. wyjazdu) i ostatni wiersz (Data+Godz. przyjazdu).";
         } else if (!(latest > earliest)) {
           ok = false;
-          reason = 'Godzina przyjazdu w ostatnim wierszu musi być późniejsza niż wyjazdu w pierwszym.';
+          reason = "Godzina przyjazdu w ostatnim wierszu musi być późniejsza niż wyjazdu w pierwszym.";
         } else {
           durationH = (latest - earliest) / 36e5;
         }
 
-        // reguły diety dla CAŁOŚCI
         let dietTotal = 0;
         if (ok) {
           if (durationH >= 8 && durationH < 12)      dietTotal = 22.5;
@@ -238,16 +238,15 @@
         }
 
         const mapped = rows.map(row => {
-          const inputs = row.querySelectorAll('input, select');
-          return { vals: Array.from(inputs).map(i => i.value || '-') };
+          const inputs = row.querySelectorAll("input, select");
+          return { vals: Array.from(inputs).map(i => i.value || "-") };
         });
 
         const totalAmount = travelCostTotal + dietTotal;
         return { mapped, travelCostTotal, dietTotal, totalAmount, earliest, latest, durationH, ok, reason };
       }
 
-      // Tylko dieta + info o dojazdach
-      calcBtn.addEventListener('click', () => {
+      calcBtn.addEventListener("click", () => {
         clearMsgs();
         const { ok, reason, dietTotal, travelCostTotal, earliest, latest, durationH } = computeDelegations();
         if (!ok) { showError(reason); return; }
@@ -257,33 +256,37 @@
         showOk(`Za wybrane wyjazdy przysługuje ${dietStr} zł${zakres}, a za dojazdy pozostaje do zwrotu ${travelStr} zł`);
       });
 
-      // PDF (html2pdf) – multipage, bez sztucznego skalowania
-      generateBtn.addEventListener('click', async () => {
+      // PDF (html2pdf)
+      generateBtn.addEventListener("click", async () => {
         clearMsgs();
-        if (typeof html2pdf === 'undefined') { showError('Nie udało się załadować biblioteki html2pdf z CDN. Odśwież stronę.'); return; }
+        if (typeof html2pdf === 'undefined') {
+          showError("Nie udało się załadować biblioteki html2pdf z CDN. Odśwież stronę (Ctrl+Shift+R).");
+          return;
+        }
 
-        const { ok, reason, mapped, travelCostTotal, dietTotal, earliest, latest, durationH } = computeDelegations();
+        const { ok, reason, mapped, travelCostTotal, dietTotal } = computeDelegations();
         if (!ok) { showError(reason); return; }
 
-        const fallback = document.getElementById('pdf-fallback');
-        fallback.innerHTML = '';
+        const fallback = document.getElementById("pdf-fallback");
+        fallback.innerHTML = "";
 
-        const root = document.createElement('div');
-        root.id = 'pdf-content';
-        root.style.width = '190mm'; // A4 (210) - marginesy (po 10mm)
+        // Wewnętrzny root skalowany do rozmiaru A4 (minus marginesy)
+        const root = document.createElement("div");
+        root.id = "pdf-content";
+        root.style.width = "190mm"; // 210mm - 20mm marginesu (10mm po bokach)
 
-        const h = document.createElement('h2');
-        const delegationVal = delegationNumber.value || 'Brak numeru';
+        const h = document.createElement("h2");
+        const delegationVal = delegationNumber.value || "Brak numeru";
         const todayStrFB = new Date().toLocaleDateString('pl-PL');
         h.textContent = `POLECENIE WYJAZDU SŁUŻBOWEGO Nr: ${delegationVal}`;
-        h.style.fontSize = '1em';
+        h.style.fontSize = "1em";
         root.appendChild(h);
 
-        const tbl = document.createElement('table');
-        const thead = document.createElement('thead');
+        const tbl = document.createElement("table");
+        const thead = document.createElement("thead");
         thead.innerHTML = `
           <tr>
-            <th colspan="7" style="font-size: 0.8em; text-align:left">Imię i nazwisko: ${employeeName.value || '-'}</th>
+            <th colspan="7" style="font-size: 0.8em; text-align:left">Imię i nazwisko: ${employeeName.value || "-"}</th>
             <th colspan="3" style="font-size: 0.8em; text-align:left">Data: ${todayStrFB}</th>
           </tr>
           <tr>
@@ -305,26 +308,26 @@
           </tr>`;
         tbl.appendChild(thead);
 
-        const tbodyEl = document.createElement('tbody');
+        const tbodyEl = document.createElement("tbody");
         mapped.forEach(m => {
           const [fromCity, fromDate, fromTime, toCity, toDate, toTime, transport, cost, km] = m.vals;
-          const tr = document.createElement('tr');
+          const tr = document.createElement("tr");
           const cells = [
             fromCity, fromDate, fromTime,
             toCity, toDate, toTime,
-            '—',
+            "—",
             transport,
             (parseFloat(cost) || 0).toFixed(2).replace('.', ','),
-            (km === '' || km == null || km === '-') ? '-' : String(km)
+            (km === "" || km == null || km === "-") ? "-" : String(km)
           ];
-          tr.innerHTML = cells.map(c => `<td style="font-size:65%;">${c || '-'}</td>`).join('');
+          tr.innerHTML = cells.map(c => `<td style="font-size:65%;">${c || "-"}</td>`).join("");
           tbodyEl.appendChild(tr);
         });
         tbl.appendChild(tbodyEl);
         root.appendChild(tbl);
 
-        const summary = document.createElement('div');
-        summary.className = 'summary';
+        const summary = document.createElement("div");
+        summary.className = "summary";
         summary.innerHTML = `
           <p style="font-size: 0.85em; text-align: left;"><strong>Suma diet (globalnie):</strong> ${fmtPLN(dietTotal)}</p>
           <p style="font-size: 0.8em; text-align: left; margin-bottom: 1em; font-style: italic; font-weight: normal;"><strong>Słownie:</strong> ${numberToWordsPL(dietTotal)}</p>
@@ -355,39 +358,49 @@
         `;
         root.appendChild(summary);
 
-        // generuj PDF
-        fallback.style.display = 'block';
+        // Podłącz i pokaż
         fallback.appendChild(root);
+        fallback.style.display = "block";
+
+        // --- SKALOWANIE do jednej strony A4 ---
+        const pxPerMm = 96 / 25.4;    // CSS px przy 96dpi
+        const pageHeightMm = 297;     // A4 (portret)
+        const marginsMm = 20;         // 10mm góra/dół jak w opcjach html2pdf
+        const availablePx = (pageHeightMm - marginsMm) * pxPerMm;
+        const contentHeight = root.scrollHeight; // wysokość treści w px
+        const scale = Math.min(1, availablePx / contentHeight);
+        root.style.transformOrigin = 'top left';
+        root.style.transform = `scale(${scale})`;
+
         try{
           await html2pdf().from(fallback).set({
             margin: 10,
-            filename: 'DEL_' + (delegationNumber.value || 'bez-numeru') + '.pdf',
-            image: { type: 'jpeg', quality: 0.98 },
+            filename: "DEL_" + (delegationNumber.value || "bez-numeru") + ".pdf",
+            image: { type: "jpeg", quality: 0.98 },
             html2canvas: { scale: 2, useCORS: true },
-            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-            pagebreak: { mode: ['css','legacy'] }
+            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
           }).save();
           clearMsgs();
         } catch(err){
-          showError('Błąd generowania PDF: ' + (err?.message || err));
+          showError("Błąd generowania PDF: " + (err?.message || err));
         } finally {
-          fallback.style.display = 'none';
-          fallback.innerHTML = '';
+          fallback.style.display = "none";
+          root.style.transform = '';
         }
       });
 
       // liczby słownie do PDF
       function numberToWordsPL(amount) {
-        const ones = ['', 'jeden', 'dwa', 'trzy', 'cztery', 'pięć', 'sześć', 'siedem', 'osiem', 'dziewięć'];
-        const teens = ['dziesięć', 'jedenaście', 'dwanaście', 'trzynaście', 'czternaście', 'piętnaście', 'szesnaście', 'siedemnaście', 'osiemnaście', 'dziewiętnaście'];
-        const tens = ['', '', 'dwadzieścia', 'trzydzieści', 'czterdzieści', 'pięćdziesiąt', 'sześćdziesiąt', 'siedemdziesiąt', 'osiemdziesiąt', 'dziewięćdziesiąt'];
-        const hundreds = ['', 'sto', 'dwieście', 'trzysta', 'czterysta', 'pięćset', 'sześćset', 'siedemset', 'osiemset', 'dziewięćset'];
-        function toWordsUnder1000(n) { if (n === 0) return ''; const h = Math.floor(n / 100), t = Math.floor((n % 100) / 10), o = n % 10; const out = []; if (h > 0) out.push(hundreds[h]); if (t === 1 && o > 0) out.push(teens[o]); else { if (t > 0) out.push(tens[t]); if (o > 0) out.push(ones[o]); } return out.join(' '); }
-        function toWords(n) { if (n === 0) return 'zero'; const thousands = Math.floor(n / 1000), rest = n % 1000, out = []; if (thousands > 0) { if (thousands === 1) out.push('tysiąc'); else { out.push(toWordsUnder1000(thousands)); const lastDigit = thousands % 10, lastTwo = thousands % 100; out.push(lastDigit >= 2 && lastDigit <= 4 && !(lastTwo >= 12 && lastTwo <= 14) ? 'tysiące' : 'tysięcy'); } } if (rest > 0) out.push(toWordsUnder1000(rest)); return out.join(' ').trim(); }
+        const ones = ["", "jeden", "dwa", "trzy", "cztery", "pięć", "sześć", "siedem", "osiem", "dziewięć"];
+        const teens = ["dziesięć", "jedenaście", "dwanaście", "trzynaście", "czternaście", "piętnaście", "szesnaście", "siedemnaście", "osiemnaście", "dziewiętnaście"];
+        const tens = ["", "", "dwadzieścia", "trzydzieści", "czterdzieści", "pięćdziesiąt", "sześćdziesiąt", "siedemdziesiąt", "osiemdziesiąt", "dziewięćdziesiąt"];
+        const hundreds = ["", "sto", "dwieście", "trzysta", "czterysta", "pięćset", "sześćset", "siedemset", "osiemset", "dziewięćset"];
+        function toWordsUnder1000(n) { if (n === 0) return ""; const h = Math.floor(n / 100), t = Math.floor((n % 100) / 10), o = n % 10; const out = []; if (h > 0) out.push(hundreds[h]); if (t === 1 && o > 0) out.push(teens[o]); else { if (t > 0) out.push(tens[t]); if (o > 0) out.push(ones[o]); } return out.join(" "); }
+        function toWords(n) { if (n === 0) return "zero"; const thousands = Math.floor(n / 1000), rest = n % 1000, out = []; if (thousands > 0) { if (thousands === 1) out.push("tysiąc"); else { out.push(toWordsUnder1000(thousands)); const lastDigit = thousands % 10, lastTwo = thousands % 100; out.push(lastDigit >= 2 && lastDigit <= 4 && !(lastTwo >= 12 && lastTwo <= 14) ? "tysiące" : "tysięcy"); } } if (rest > 0) out.push(toWordsUnder1000(rest)); return out.join(" ").trim(); }
         const zl = Math.floor(amount), gr = Math.round((amount - zl) * 100);
-        const zlWord = toWords(zl) + (zl === 1 ? ' złoty' : zl % 10 >= 2 && zl % 10 <= 4 && (zl % 100 < 10 || zl % 100 >= 20) ? ' złote' : ' złotych');
-        const grWord = gr > 0 ? toWords(gr) + (gr === 1 ? ' grosz' : gr % 10 >= 2 && gr % 10 <= 4 && (gr % 100 < 10 || gr % 100 >= 20) ? ' grosze' : ' groszy') : '';
-        return zlWord + (grWord ? ' ' + grWord : '');
+        const zlWord = toWords(zl) + (zl === 1 ? " złoty" : zl % 10 >= 2 && zl % 10 <= 4 && (zl % 100 < 10 || zl % 100 >= 20) ? " złote" : " złotych");
+        const grWord = gr > 0 ? toWords(gr) + (gr === 1 ? " grosz" : gr % 10 >= 2 && gr % 10 <= 4 && (gr % 100 < 10 || gr % 100 >= 20) ? " grosze" : " groszy") : "";
+        return zlWord + (grWord ? " " + grWord : "");
       }
     });
   </script>
