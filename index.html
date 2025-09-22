@@ -11,32 +11,48 @@
     :root{
       --brand:#2c3e70; --ui-radius:12px; --ui-border:#d0d7de; --ui-bg:#fff; --ui-text:#111; --ring: rgba(44,62,112,.22);
     }
-  body { 
-  font-family: 'Noto Sans', Arial, sans-serif; 
-  background: #f5f5f5; 
-  color: #111;
-  max-width: 80%; 
-  margin: 2em auto;   /* odstęp góra/dół 2em, horyzontalnie auto = centrowanie */
+ /* === Reset i ogólny wygląd === */
+body { 
+  <div class="scale-shell">
+  <div class="scale-target">
+    
+ 
+  font-family:'Noto Sans', Arial, sans-serif; 
+  background:#f5f5f5; 
+  color:#111;
+  margin: 0;             /* zamiast kombinacji z auto */
+  min-height: 100vh;
 }
 
+/* Ustal rozmiar „projektowy” UI */
+:root {
+  --base-w: 1920;
+  --base-h: 1200;
+}
+
+/* Wrapper do centrowania */
 .scale-shell {
-  display: flex;
-  justify-content: center;  /* centrowanie poziome */
-  /* jeśli chcesz także pionowe: */
-  /* align-items: center;
-     min-height: 100vh; */
-  width: 100%;
-  overflow-x: visible;
+  display: grid;
+  place-items: start center; /* wyśrodkowanie horyzontalne, góra trzyma do topu */
+  min-height: 100vh;
+  overflow: hidden;
+  width: 100vw;
 }
 
-.scale-keeper { width: 100%; }
-.scale-target { transform-origin: top center; }
+/* Kontener skalowany */
+.scale-target {
+  width: calc(var(--base-w) * 1px);
+  transform-origin: top left;
+}
 
-/* Skalowanie dla mniejszych ekranów */
-@media (max-width: 1919px), (max-height: 1199px) {
-  .scale-shell  { overflow-x: hidden; }
-  .scale-keeper { width: calc(100% / 0.75); }
-  .scale-target { transform: scale(0.75); }
+/* Skalowanie dla ekranów mniejszych niż 1920x1200 */
+@media (width < 1920px), (height < 1200px) {
+  .scale-target {
+    --scale-w: calc(100vw / (var(--base-w) * 1px));
+    --scale-h: calc(100vh / (var(--base-h) * 1px));
+    --scale: min(var(--scale-w), var(--scale-h));
+    transform: scale(var(--scale));
+  }
 }
     /* === KONIEC DODANEGO BLOKU === */
 
@@ -613,5 +629,7 @@
 
   </div><!-- .scale-target -->
   </div><!-- .scale-keeper -->
+   </div>
+</div>
 </body>
 </html>
