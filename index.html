@@ -591,6 +591,26 @@
 
         return zlWord + (grWord ? " " + grWord : "");
       }
+      // liczby słownie do PDF — POPRAWIONA WERSJA
+      function numberToWordsPL(amount) {
+        // ...
+      }
+
+      // --- SKALOWANIE STRONY PRZY MNIEJSZYCH ROZDZIELCZOŚCIACH ---
+      function applyScaling() {
+        const w = window.innerWidth;
+        const h = window.innerHeight;
+        if (w < 1920 && h < 1200) {
+          document.body.style.transform = "scale(0.8)";
+          document.body.style.transformOrigin = "top center";
+        } else {
+          document.body.style.transform = "";
+        }
+      }
+
+      // uruchom przy starcie i przy zmianie rozmiaru okna
+      applyScaling();
+      window.addEventListener("resize", applyScaling);
     });
   </script>
 </body>
