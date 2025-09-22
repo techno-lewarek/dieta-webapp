@@ -11,46 +11,33 @@
     :root{
       --brand:#2c3e70; --ui-radius:12px; --ui-border:#d0d7de; --ui-bg:#fff; --ui-text:#111; --ring: rgba(44,62,112,.22);
     }
-    body { 
-      font-family:'Noto Sans', Arial, sans-serif; 
-      margin:2em; 
-      background:#f5f5f5; 
-      color:#111;
-      max-width: 80%; 
-      max-height: 80%;      /* <<< NOWE: maksymalnie 80% szerokości */
-      margin-left: auto;    /* wycentrowanie */
-      margin-right: auto; 
-    }
+  body { 
+  font-family: 'Noto Sans', Arial, sans-serif; 
+  background: #f5f5f5; 
+  color: #111;
+  max-width: 80%; 
+  margin: 2em auto;   /* odstęp góra/dół 2em, horyzontalnie auto = centrowanie */
+}
 
-    /* === Skalowanie + NOWE centrowanie lewo-prawo === */
-    .scale-shell {             /* NOWE: centrowanie horyzontalne całej strony */
-      display: flex;
-      justify-content: center; /* wyśrodkuj w poziomie */
-      width: 100%;
-      overflow-x: visible;
-    }
-    .scale-keeper { width: 100%; }
-    .scale-target { transform-origin: top center; }
+.scale-shell {
+  display: flex;
+  justify-content: center;  /* centrowanie poziome */
+  /* jeśli chcesz także pionowe: */
+  /* align-items: center;
+     min-height: 100vh; */
+  width: 100%;
+  overflow-x: visible;
+}
 
-    /* Jeśli którakolwiek krawędź ekranu jest mniejsza niż 1920x1200 – skala 0.75 */
-    @media (max-width: 1919px), (max-height: 1199px) {
-      .scale-target { transform-origin: top center; }
-      .scale-shell  { overflow-x:hidden; }
-      .scale-keeper { width: calc(100% / 0.8); }  /* kompensacja szerokości pod skalę */
-      .scale-target { transform: scale(0.8); }    /* faktyczne zmniejszenie UI */
-    }
-    }
+.scale-keeper { width: 100%; }
+.scale-target { transform-origin: top center; }
 
-    /* === DODANE: Skalowanie całej strony dla monitorów < 1920x1200 === */
-    .scale-keeper { width: 100%; }
-    .scale-target { transform-origin: top center; }
-
-    /* Jeśli którakolwiek krawędź ekranu jest mniejsza niż 1920x1200, skalujemy do 0.75
-       scale-keeper poszerzamy odwrotną skalą, by po przeskalowaniu zachować efektywne 100% szerokości */
-    @media (max-width: 1919px), (max-height: 1199px) {
-      .scale-keeper { width: calc(100% / 0.75); }
-      .scale-target { transform: scale(0.75); }
-    }
+/* Skalowanie dla mniejszych ekranów */
+@media (max-width: 1919px), (max-height: 1199px) {
+  .scale-shell  { overflow-x: hidden; }
+  .scale-keeper { width: calc(100% / 0.75); }
+  .scale-target { transform: scale(0.75); }
+}
     /* === KONIEC DODANEGO BLOKU === */
 
     h1 { margin:.5em 0 1em; font-size:2em; text-align:center }
