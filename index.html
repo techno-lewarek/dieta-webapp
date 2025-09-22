@@ -21,27 +21,29 @@
       margin-left: auto;
       margin-right: auto; 
     }
-    @media (max-width: 1200px) {
-      body { max-width: 100%; }
-    }
+    @media (max-width: 1200px) { body { max-width: 100%; } }
 
-    /* === Skalowanie + NOWE centrowanie lewo-prawo === */
-    .scale-shell {             /* NOWE: centrowanie horyzontalne całej strony */
-      display: flex;
-      justify-content: center; /* wyśrodkuj w poziomie */
-      width: 100%;
-      overflow-x: visible;
-    }
-    .scale-keeper { width: 100%; }
+    /* === SKALOWANIE + CENTROWANIE (jak wcześniej) === */
+    .scale-shell { display:flex; justify-content:center; width:100%; overflow-x:visible; }
+    .scale-keeper { width:100%; }
     .scale-target { transform-origin: top center; }
-
-    /* Jeśli którakolwiek krawędź ekranu jest mniejsza niż 1920x1200 – skala 0.75 */
     @media (max-width: 1919px), (max-height: 1199px) {
-      .scale-shell { overflow-x: hidden; }         /* ukryj nadmiar przy poszerzeniu keepera */
-      .scale-keeper { width: calc(100% / 0.8); }  /* kompensacja szerokości pod skalę */
-      .scale-target { transform: scale(0.8); }    /* faktyczne zmniejszenie UI */
+      .scale-shell { overflow-x: hidden; }
+      .scale-keeper { width: calc(100% / 0.75); }
+      .scale-target { transform: scale(0.75); }
     }
-    /* === KONIEC: Skalowanie + centrowanie === */
+
+    /* === PDF PORTAL: poza skalą/overflow, ale widoczny dla html2canvas === */
+    #pdf-fallback-root{
+      position: fixed;       /* odłącz od layoutu wrapperów */
+      left: -99999px; top: 0;
+      width: auto; height: auto;
+      transform: none !important;          /* wyzeruj dziedziczenie transform */
+      visibility: visible !important;      /* musi być widoczny dla renderera */
+      pointer-events: none;
+      z-index: -1;
+      display: none;         /* włączam tylko na czas generowania */
+    }
 
     h1 { margin:.5em 0 1em; font-size:2em; text-align:center }
     .actions { text-align:center; margin:.5em 0 1.25em; }
@@ -53,9 +55,8 @@
     .form-group { margin-bottom:1em; max-width:720px; margin-left:auto; margin-right:auto; }
     .form-group label { display:block; margin-bottom:.5em; font-weight:700 }
 
-    /* === SCROLL POZIOMY DLA TABELI === */
-    .table-wrapper { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-    .table-wrapper table { min-width: 1000px; }
+    .table-wrapper { overflow-x:auto; -webkit-overflow-scrolling:touch; }
+    .table-wrapper table { min-width:1000px; }
 
     table { width:100%; border-collapse:collapse; margin:1em auto; table-layout:fixed; background:#fff; max-width:1200px; }
     th, td { border:1px solid #ccc; padding:8px; text-align:center; vertical-align:middle; word-wrap:break-word; overflow-wrap:break-word; font-size:1em; }
@@ -70,7 +71,8 @@
     .form-group :where(input, select):hover, #delegationTable :where(input, select):hover{ border-color:#b6bec8; background:#fafafa; }
     .form-group :where(input, select):focus, #delegationTable :where(input, select):focus{ outline:0; border-color:var(--brand); box-shadow:0 0 0 4px var(--ring); background:#fff; }
 
-    #delegationTable input[type=number]::-webkit-outer-spin-button, #delegationTable input[type=number]::-webkit-inner-spin-button{ -webkit-appearance:none; margin:0; }
+    #delegationTable input[type=number]::-webkit-outer-spin-button,
+    #delegationTable input[type=number]::-webkit-inner-spin-button{ -webkit-appearance:none; margin:0; }
     #delegationTable input[type=number]{ -moz-appearance:textfield; }
     #delegationTable :where(input, select):disabled{ background:#f3f4f6; color:#6b7280; cursor:not-allowed; }
 
@@ -79,27 +81,26 @@
     .msg-ok   { background:#ecfdf5; color:#065f46; border:1px solid #a7f3d0; padding:.75em 1em; border-radius:8px; display:none; }
     .hint { font-size:.95em; text-align:left; max-width:1200px; margin:0 auto; color:#374151}
 
-    /* Mini-select w komórce transportu */
     .transport-cell { display:flex; gap:8px; align-items:center; }
     .transport-cell select { flex:1; }
     .engine-select { display:none; min-width:210px; }
 
-    /* Dedykowane style do PDF (mniejsza czcionka i kompresja) */
     @media print {
       table th, table td { font-size:0.55em !important; padding:2px !important; }
       h2, h1 { font-size:0.9em !important; }
       p { font-size:0.65em !important; }
     }
-
-    #pdf-fallback table th, #pdf-fallback table td { font-size:0.55em !important; padding:2px !important; }
-    #pdf-fallback h2 { font-size:0.9em !important; }
-    #pdf-fallback p { font-size:0.65em !important; }
+    #pdf-fallback-root table th, #pdf-fallback-root table td { font-size:0.55em !important; padding:2px !important; }
+    #pdf-fallback-root h2 { font-size:0.9em !important; }
+    #pdf-fallback-root p { font-size:0.65em !important; }
   </style>
 </head>
 <body>
-  <!-- NOWE: dodatkowy wrapper do centrowania lewo-prawo -->
+  <!-- >>> PDF PORTAL: poza skalowanym wrapperem, by html2pdf zawsze widział treść -->
+  <div id="pdf-fallback-root"></div>
+
+  <!-- Skalowany i wyśrodkowany UI -->
   <div class="scale-shell">
-    <!-- Istniejący system skalowania -->
     <div class="scale-keeper">
       <div class="scale-target">
 
