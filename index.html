@@ -21,6 +21,10 @@
       margin-left: auto;    /* wycentrowanie */
       margin-right: auto; 
     }
+    body.scaled-08 {
+  transform: scale(0.8);
+  transform-origin: top center;
+}
     @media (max-width: 1200px) {
       body {
         max-width: 100%;    /* <<< NOWE: na mniejszych ekranach 100% */
@@ -596,19 +600,17 @@
         // ...
       }
 
-      // --- SKALOWANIE STRONY PRZY MNIEJSZYCH ROZDZIELCZOŚCIACH ---
+        // --- SKALOWANIE STRONY PRZY MNIEJSZYCH ROZDZIELCZOŚCIACH ---
       function applyScaling() {
         const w = window.innerWidth;
         const h = window.innerHeight;
         if (w < 1920 && h < 1200) {
-          document.body.style.transform = "scale(0.8)";
-          document.body.style.transformOrigin = "top center";
+          document.body.classList.add("scaled-08");
         } else {
-          document.body.style.transform = "";
+          document.body.classList.remove("scaled-08");
         }
       }
 
-      // uruchom przy starcie i przy zmianie rozmiaru okna
       applyScaling();
       window.addEventListener("resize", applyScaling);
     });
