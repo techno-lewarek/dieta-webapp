@@ -1,5 +1,7 @@
 <!DOCTYPE html>
 <html lang="pl">
+<!DOCTYPE html>
+<html lang="pl">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
@@ -15,18 +17,14 @@
       background:#f5f5f5; 
       color:#111;
       max-width: 80%; 
-      max-height: 80%;
-      margin-left: auto;
+      max-height: 80%;      /* <<< NOWE: maksymalnie 80% szerokości */
+      margin-left: auto;    /* wycentrowanie */
       margin-right: auto; 
     }
     @media (max-width: 1200px) {
-      body { max-width: 100%; }
-    }
-
-    /* PODGLĄDOWE SKALOWANIE CAŁEJ STRONY NA MAŁYCH EKRANACH */
-    body.scaled-08 {
-      transform: scale(0.8);
-      transform-origin: top center;
+      body {
+        max-width: 100%;    /* <<< NOWE: na mniejszych ekranach 100% */
+      }
     }
 
     h1 { margin:.5em 0 1em; font-size:2em; text-align:center }
@@ -39,7 +37,7 @@
     .form-group { margin-bottom:1em; max-width:720px; margin-left:auto; margin-right:auto; }
     .form-group label { display:block; margin-bottom:.5em; font-weight:700 }
 
-    /* SCROLL POZIOMY DLA TABELI */
+    /* === SCROLL POZIOMY DLA TABELI === */
     .table-wrapper { overflow-x: auto; -webkit-overflow-scrolling: touch; }
     .table-wrapper table { min-width: 1000px; }
 
@@ -70,7 +68,7 @@
     .transport-cell select { flex:1; }
     .engine-select { display:none; min-width:210px; }
 
-    /* Dedykowane style do PDF (mniejsza czcionka i kompresja) */
+    /* Dedykowane style do PDF (mniejsza czcionka i kompresja, żeby nie obcinało wierszy) */
     @media print {
       table th, table td { font-size:0.55em !important; padding:2px !important; }
       h2, h1 { font-size:0.9em !important; }
@@ -104,10 +102,12 @@
     <input type="text" id="delegationNumber" placeholder="np. KW/001/2025" />
   </div>
 
+  <!-- DODANE POLE: Jednostka przyjmująca delegowanego pracownika (klient) -->
   <div class="form-group">
     <label for="clientUnit">Jednostka przyjmująca delegowanego pracownika (klient):</label>
     <input type="text" id="clientUnit" placeholder="np. Nazwa firmy / oddział" />
   </div>
+  <!-- KONIEC DODANEGO POLA -->
 
   <p class="hint">Uzupełnij: w pierwszym wierszu <strong>Data + Godz.</strong> WYJAZDU, w ostatnim wierszu <strong>Data + Godz.</strong> PRZYJAZDU. Diety liczone są wyłącznie po tym zakresie.</p>
 
@@ -122,15 +122,15 @@
           <th>Data</th>
           <th>Godzina</th>
           <th>Środek lokomocji</th>
-          <th>km (jeśli prywatne)</th>
-          <th>Koszt przejazdu (zł)</th>
+          <th>km (jeśli prywatne)</th> <!-- ZAMIANA KOLEJNOŚCI -->
+          <th>Koszt przejazdu (zł)</th> <!-- ZAMIANA KOLEJNOŚCI -->
         </tr>
       </thead>
       <tbody></tbody>
     </table>
   </div>
 
-  <!-- Pola pod tabelą dla auta prywatnego -->
+  <!-- NOWE: Pola pod tabelą dla auta prywatnego -->
   <div class="form-group" id="carInfoBlock">
     <label>Auto prywatne – dane do rozliczenia:</label>
     <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
@@ -138,6 +138,7 @@
       <input type="text" id="carPlates" placeholder="Nr rejestracyjny (np. WX 12345)" />
     </div>
   </div>
+  <!-- KONIEC NOWEGO BLOKU -->
 
   <div class="actions">
     <button class="btn" id="addRowBtn">Dodaj wiersz</button>
@@ -159,31 +160,32 @@
       const tbody = document.querySelector("#delegationTable tbody");
       const employeeName = document.getElementById("employeeName");
       const delegationNumber = document.getElementById("delegationNumber");
-      const clientUnit = document.getElementById("clientUnit");
+      const clientUnit = document.getElementById("clientUnit"); // <-- istniejące nowe pole
       const addRowBtn = document.getElementById('addRowBtn');
       const generateBtn = document.getElementById('generatePDF');
       const calcBtn = document.getElementById('calcDiet');
       const msgErr = document.getElementById('msgError');
       const msgOk = document.getElementById('msgOk');
 
-      // dane auta do PDF (pod tabelą)
+      // NOWE: dane auta do PDF (pod tabelą)
       const carMakeModel = document.getElementById('carMakeModel');
       const carPlates = document.getElementById('carPlates');
 
       // Stawki kilometrówki
-      const KM_RATE = { small: 0.89, large: 1.15 };
+      const KM_RATE = {
+        small: 0.89, // <= 900 cm3
+        large: 1.15  // > 900 cm3
+      };
 
       function showError(text){ msgOk.style.display='none'; msgErr.textContent=text; msgErr.style.display='block'; }
       function showOk(text){ msgErr.style.display='none'; msgOk.textContent=text; msgOk.style.display='block'; }
       function clearMsgs(){ msgErr.style.display='none'; msgOk.style.display='none'; }
 
-      // Automatyczny prefiks numeru delegacji
       employeeName.addEventListener("change", () => {
         const value = employeeName.value;
         delegationNumber.value = value ? value.split(" ").map(p => p[0].toUpperCase()).join("") + "/" : "";
       });
 
-      // Dodawanie wiersza
       function addRow() {
         const now = new Date();
         const today = now.toISOString().split("T")[0];
@@ -210,8 +212,8 @@
               </select>
             </div>
           </td>
-          <td><input type="number" step="0.1" class="km-input" disabled /></td>
-          <td><input type="number" step="0.01" class="cost-input" value="0" /></td>
+          <td><input type="number" step="0.1" class="km-input" disabled /></td>               <!-- ZAMIANA KOLEJNOŚCI -->
+          <td><input type="number" step="0.01" class="cost-input" value="0" /></td>          <!-- ZAMIANA KOLEJNOŚCI -->
         `;
 
         const transportSelect = row.querySelector('.transport-select');
@@ -267,15 +269,15 @@
         cityList.appendChild(option);
       });
 
-      // Formatery
+      // formatery
       const fmtPLN = (v) => new Intl.NumberFormat('pl-PL', { style:'currency', currency:'PLN' }).format(v);
       const fmtDT  = (d) => d ? new Date(d).toLocaleString('pl-PL') : "-";
 
-      // >>> DIETA liczona TYLKO od 1. wyjazdu do ostatniego przyjazdu
+      // >>> KLUCZ: dieta liczona TYLKO od 1. wyjazdu do ostatniego przyjazdu
       function computeDelegations() {
         const rows = Array.from(tbody.querySelectorAll("tr"));
 
-        // Koszt przejazdów (po zmianie kolumn koszt w index 8)
+        // Uwaga: po zamianie kolumn koszt jest w index 8 (a km w 7)
         const travelCostTotal = rows.reduce((sum, row) => {
           const cost = parseFloat(row.cells[8]?.querySelector('.cost-input')?.value);
           return sum + (isNaN(cost) ? 0 : cost);
@@ -318,7 +320,7 @@
           }
         }
 
-        // mapowanie do PDF (nowa kolejność kolumn)
+        // mapujemy potrzebne wartości do PDF (zachowując nową kolejność kolumn)
         const mapped = rows.map(row => {
           const fromCity = row.cells[0].querySelector('input')?.value || "-";
           const fromDate = row.cells[1].querySelector('input')?.value || "-";
@@ -354,13 +356,13 @@
         showOk(`Za wybrane wyjazdy przysługuje ${dietStr} zł${zakres}, a za dojazdy pozostaje do zwrotu ${travelStr} zł`);
       });
 
-      // DETEKCJA MOBILNA – blokada PDF
+      // --- DETEKCJA MOBILNA I BLOKADA DLA GENEROWANIA PDF NA TELEFONACH ---
       function isMobile() {
         return (window.innerWidth && window.innerWidth <= 767) ||
                /Mobi|Android|iPhone|iPad|iPod|Windows Phone/i.test(navigator.userAgent);
       }
 
-      // Blokada kliknięcia na mobile
+      // Listener w trybie capture, by zablokować kliknięcie PRZED Twoim handlerem na mobile
       generateBtn.addEventListener('click', function (e) {
         if (isMobile()) {
           e.preventDefault();
@@ -368,6 +370,7 @@
           showError("Generowanie PDF dostępne tylko na komputerze. Na telefonie możesz jedynie wyliczyć dietę (użyj przycisku „Tylko wylicz mi dietę”).");
         }
       }, { capture: true });
+      // --- KONIEC MOBILNEJ BLOKADY ---
 
       // PDF (html2pdf)
       generateBtn.addEventListener("click", async () => {
@@ -377,16 +380,8 @@
           return;
         }
 
-        // Tymczasowo wyłącz skalowanie podglądu (zapobiega nakładaniu liter/cyfr)
-        const hadScale = document.body.classList.contains("scaled-08");
-        if (hadScale) document.body.classList.remove("scaled-08");
-
         const { ok, reason, mapped, travelCostTotal, dietTotal, earliest, latest } = computeDelegations();
-        if (!ok) {
-          if (hadScale) document.body.classList.add("scaled-08");
-          showError(reason); 
-          return; 
-        }
+        if (!ok) { showError(reason); return; }
 
         const fallback = document.getElementById("pdf-fallback");
         fallback.innerHTML = "";
@@ -411,7 +406,7 @@
         clientInfo.innerHTML = `<strong>Jednostka przyjmująca delegowanego pracownika (klient):</strong> ${clientUnitVal}`;
         root.appendChild(clientInfo);
 
-        // Dane auta prywatnego (jeśli podano cokolwiek)
+        // NOWE: Dane auta prywatnego (jeśli podano cokolwiek)
         const carMM = (carMakeModel?.value || "").trim();
         const carPL = (carPlates?.value || "").trim();
         if (carMM || carPL) {
@@ -443,8 +438,8 @@
             <th style="font-size: 0.8em; white-space: nowrap;">Godz.</th>
             <th style="font-size: 0.8em; white-space: nowrap;">Dieta (zł)</th>
             <th style="font-size: 0.8em; white-space: nowrap;">Transport</th>
-            <th style="font-size: 0.8em; white-space: nowrap;">km</th>
-            <th style="font-size: 0.8em; white-space: nowrap;">Koszt (zł)</th>
+            <th style="font-size: 0.8em; white-space: nowrap;">km</th>          <!-- ZAMIANA KOLEJNOŚCI W PDF -->
+            <th style="font-size: 0.8em; white-space: nowrap;">Koszt (zł)</th> <!-- ZAMIANA KOLEJNOŚCI W PDF -->
           </tr>`;
         tbl.appendChild(thead);
 
@@ -506,20 +501,25 @@
         root.appendChild(summary);
 
         // Podłącz i pokaż
-        const fallback = document.getElementById("pdf-fallback");
         fallback.appendChild(root);
         fallback.style.display = "block";
 
-        // Skalowanie zawartości PDF (małe przycięcie)
+        // --- SKALOWANIE do jednej strony A4 ---
+        const pxPerMm = 96 / 25.4;    // CSS px przy 96dpi
+        const pageHeightMm = 297;     // A4 (portret)
+        const marginsMm = 20;         // 10mm góra/dół jak w opcjach html2pdf
+        const availablePx = (pageHeightMm - marginsMm) * pxPerMm;
+        const contentHeight = root.scrollHeight; // wysokość treści w px
+        const scale = 0.95;
         root.style.transformOrigin = 'top left';
-        root.style.transform = `scale(0.95)`;
+        root.style.transform = `scale(${scale})`;
 
         try{
           await html2pdf().from(fallback).set({
             margin: 10,
             filename: "DEL_" + (delegationNumber.value || "bez-numeru") + ".pdf",
             image: { type: "jpeg", quality: 0.98 },
-            html2canvas: { scale: 2, useCORS: true, letterRendering: true },
+            html2canvas: { scale: 2, useCORS: true },
             jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
           }).save();
           clearMsgs();
@@ -528,47 +528,38 @@
         } finally {
           fallback.style.display = "none";
           root.style.transform = '';
-          fallback.innerHTML = "";
-          // PRZYWRÓĆ skalowanie podglądu, jeśli było włączone
-          if (hadScale) document.body.classList.add("scaled-08");
         }
       });
 
-      // Liczby słownie do PDF — BEZPIECZNA WERSJA (brak 'undefined')
-      function numberToWordsPL(amountInput) {
-        // Bezpieczna konwersja na liczbę dodatnią z 2 miejscami po przecinku
-        const n = Number(amountInput);
-        const amount = Number.isFinite(n) ? Math.max(0, Math.round((n + Number.EPSILON) * 100) / 100) : 0;
-
+      // liczby słownie do PDF — POPRAWIONA WERSJA
+      function numberToWordsPL(amount) {
         const ones = ["", "jeden", "dwa", "trzy", "cztery", "pięć", "sześć", "siedem", "osiem", "dziewięć"];
         const teens = ["dziesięć", "jedenaście", "dwanaście", "trzynaście", "czternaście", "piętnaście", "szesnaście", "siedemnaście", "osiemnaście", "dziewiętnaście"];
         const tens = ["", "", "dwadzieścia", "trzydzieści", "czterdzieści", "pięćdziesiąt", "sześćdziesiąt", "siedemdziesiąt", "osiemdziesiąt", "dziewięćdziesiąt"];
         const hundreds = ["", "sto", "dwieście", "trzysta", "czterysta", "pięćset", "sześćset", "siedemset", "osiemset", "dziewięćset"];
 
-        function toWordsUnder1000(x) {
-          x = Math.floor(x);
-          if (!Number.isFinite(x) || x <= 0) return "";
-          const h = Math.floor(x / 100);
-          const t = Math.floor((x % 100) / 10);
-          const o = x % 10;
+        function toWordsUnder1000(n) {
+          if (n === 0) return "";
+          const h = Math.floor(n / 100);
+          const t = Math.floor((n % 100) / 10);
+          const o = n % 10;
           const out = [];
 
-          if (h > 0) out.push(hundreds[h] || "");
+          if (h > 0) out.push(hundreds[h]);
 
           if (t === 1) {
-            out.push(o === 0 ? "dziesięć" : (teens[o] || ""));
+            out.push(o === 0 ? "dziesięć" : teens[o]);
           } else {
-            if (t > 0) out.push(tens[t] || "");
-            if (o > 0) out.push(ones[o] || "");
+            if (t > 0) out.push(tens[t]);
+            if (o > 0) out.push(ones[o]);
           }
           return out.join(" ").trim();
         }
 
-        function toWords(x) {
-          x = Math.floor(x);
-          if (!Number.isFinite(x) || x === 0) return "zero";
-          const thousands = Math.floor(x / 1000);
-          const rest = x % 1000;
+        function toWords(n) {
+          if (n === 0) return "zero";
+          const thousands = Math.floor(n / 1000);
+          const rest = n % 1000;
           const out = [];
           if (thousands > 0) {
             if (thousands === 1) {
@@ -580,42 +571,26 @@
             }
           }
           if (rest > 0) out.push(toWordsUnder1000(rest));
-          const joined = out.join(" ").trim();
-          return joined.length ? joined : "zero";
+          return out.join(" ").trim();
         }
 
-        const zl = Math.floor(amount);
-        const gr = Math.round((amount - zl) * 100);
+        const amountRounded = Math.round((amount + Number.EPSILON) * 100) / 100;
+        const zl = Math.floor(amountRounded);
+        const gr = Math.round((amountRounded - zl) * 100);
 
-        const zlText = toWords(zl);
         const zlWord =
-          zlText + (zl === 1 ? " złoty"
+          toWords(zl) +
+          (zl === 1 ? " złoty"
             : zl % 10 >= 2 && zl % 10 <= 4 && (zl % 100 < 10 || zl % 100 >= 20) ? " złote"
             : " złotych");
 
-        if (gr > 0) {
-          const grText = toWords(gr);
-          const grWord = grText + (gr === 1 ? " grosz"
-            : gr % 10 >= 2 && gr % 10 <= 4 && (gr % 100 < 10 || gr % 100 >= 20) ? " grosze" : " groszy");
-          return zlWord + " " + grWord;
-        }
-        return zlWord;
-      }
+        const grWord = gr > 0
+          ? toWords(gr) + (gr === 1 ? " grosz"
+            : gr % 10 >= 2 && gr % 10 <= 4 && (gr % 100 < 10 || gr % 100 >= 20) ? " grosze" : " groszy")
+          : "";
 
-      // --- SKALOWANIE STRONY PRZY MNIEJSZYCH ROZDZIELCZOŚCIACH (podgląd) ---
-      function applyScaling() {
-        const w = window.innerWidth;
-        const h = window.innerHeight;
-        if (w < 1920 && h < 1200) {
-          document.body.classList.add("scaled-08");
-        } else {
-          document.body.classList.remove("scaled-08");
-        }
+        return zlWord + (grWord ? " " + grWord : "");
       }
-
-      // uruchom przy starcie i przy zmianie rozmiaru okna
-      applyScaling();
-      window.addEventListener("resize", applyScaling);
     });
   </script>
 </body>
